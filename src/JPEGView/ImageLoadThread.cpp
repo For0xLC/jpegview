@@ -21,6 +21,7 @@
 #include "WEBPWrapper.h"
 #include "QOIWrapper.h"
 #include "PSDWrapper.h"
+#include "DDSWrapper.h"
 #include "MaxImageDef.h"
 
 
@@ -79,7 +80,10 @@ static EImageFormat GetImageFormat(LPCTSTR sFileName) {
 		return IF_QOI;
 	} else if (header[0] == '8' && header[1] == 'B' && header[2] == 'P' && header[3] == 'S') {
 		return IF_PSD;
+	} else if (header[0] == 'D' && header[1] == 'D' && header[2] == 'S' && header[3] == ' ') {
+		return IF_DDS;
 	} else if (header[0] == 0xd7 && header[1] == 0xcd && header[2] == 0xc6 && header[3] == 0x9a) {
+		// Windows Metafile(WMF) Header: D7 CD C6 9A
 		return IF_WMF;
 	}
 
@@ -391,6 +395,14 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 			DeleteCachedJxlDecoder();
 			DeleteCachedAvifDecoder();
 			ProcessReadWICRequest(&rq);
+			break;
+		case IF_DDS:
+			DeleteCachedGDIBitmap();
+			DeleteCachedWebpDecoder();
+			DeleteCachedPngDecoder();
+			DeleteCachedJxlDecoder();
+			DeleteCachedAvifDecoder();
+			ProcessReadDDSRequest(&rq);
 			break;
 		default:
 			// try with GDI+
@@ -1070,6 +1082,12 @@ void CImageLoadThread::ProcessReadGDIPlusRequest(CRequest * request) {
 	if (!isAnimatedGIF) {
 		DeleteCachedGDIBitmap();
 	}
+}
+
+void CImageLoadThread::ProcessReadDDSRequest(CRequest* request) {
+	const wchar_t* sFileName;
+	sFileName = (const wchar_t*)request->FileName;
+	request->Image = DDSWrapper::ReadImage(sFileName, request->OutOfMemory);
 }
 
 static unsigned char* alloc(size_t sizeInBytes) {
