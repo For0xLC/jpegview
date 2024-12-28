@@ -7,6 +7,7 @@
 
 #include <cstdint>
 
+// Contains metadata for BCN decoding
 typedef struct DecodeState {
     int xsize; // Width
     int ysize; // Height

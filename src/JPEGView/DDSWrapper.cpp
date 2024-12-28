@@ -8,8 +8,6 @@
 // Tested with same .dds files as Pillow to replicate functionality
 CJPEGImage* DDSWrapper::ReadImage(LPCTSTR strFileName, bool& bOutOfMemory)
 {
-    bOutOfMemory = false;
-
     FILE* file = _tfopen(strFileName, _T("rb"));
     if (file == NULL) {
         return NULL;
@@ -57,7 +55,7 @@ CJPEGImage* DDSWrapper::ReadImage(LPCTSTR strFileName, bool& bOutOfMemory)
 
     fclose(file);
 
-    // Multiply alpha value into each AABBGGRR pixel
+    // Fake alpha channel
     uint32* pImage32 = (uint32*)pixelBuf;
     for (int i = 0; i < header.dwWidth * header.dwHeight; i++)
         *pImage32++ = Helpers::AlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
@@ -68,6 +66,9 @@ CJPEGImage* DDSWrapper::ReadImage(LPCTSTR strFileName, bool& bOutOfMemory)
 }
 
 
+// Takes a dw(RGBA)BitMask and determines
+// - how many bits of padding are on the right, used for shifting pixel data
+// - the maximum value possible with the mask, used for normalizing pixel data
 void GetMaskPadding(uint32_t mask, uint32_t* offset, uint32_t* maxVal) {
     if (mask == 0) {
         return;
@@ -90,6 +91,7 @@ void GetMaskPadding(uint32_t mask, uint32_t* offset, uint32_t* maxVal) {
 }
 
 
+// Handles uncompressed RGB(A) pixel data 
 uint8_t* DDSWrapper::HandleDDSRGB(FILE* file, const DDS_HEADER* header, bool& bOutOfMemory) {
     uint32_t byteCount = header->pixelFormat.dwRGBBitCount / 8; // How many bits RGB(A) is total
     uint32_t inPixels = header->dwHeight * header->dwWidth;
@@ -141,6 +143,7 @@ uint8_t* DDSWrapper::HandleDDSRGB(FILE* file, const DDS_HEADER* header, bool& bO
 }
 
 
+// Handles uncompressed luminance pixel data
 uint8_t* DDSWrapper::HandleLuminance(FILE* file, const DDS_HEADER* header, bool& bOutOfMemory) {
     uint32_t byteCount = header->pixelFormat.dwRGBBitCount / 8;
     // Handle unsupported pixel formats
@@ -196,6 +199,7 @@ uint8_t* DDSWrapper::HandleLuminance(FILE* file, const DDS_HEADER* header, bool&
 }
 
 
+// Handles palette indexed pixel data
 uint8_t* DDSWrapper::HandlePaletteIndexed(FILE* file, const DDS_HEADER* header, bool& bOutOfMemory) {
     // Read palette buf
     uint32_t paletteSize = 256 * 4;
@@ -232,6 +236,7 @@ uint8_t* DDSWrapper::HandlePaletteIndexed(FILE* file, const DDS_HEADER* header, 
 }
 
 
+// Handles non-DXT10 compressed pixel data
 uint8_t* DDSWrapper::HandleFourCC(FILE* file, const DDS_HEADER* header, bool& bOutOfMemory) {
     // Setup decoder state
     DecodeState state;
@@ -311,6 +316,7 @@ uint8_t* DDSWrapper::HandleFourCC(FILE* file, const DDS_HEADER* header, bool& bO
 }
 
 
+// Helper function for DXT10 uncompressed R8G8B8A8 pixel data
 uint8_t* HandleDXT10_R8G8B8A(FILE* file, const DDS_HEADER* header, bool& bOutOfMemory) {
     // Raw loading
     int outSize = header->dwHeight * header->dwWidth * 4;
@@ -333,6 +339,7 @@ uint8_t* HandleDXT10_R8G8B8A(FILE* file, const DDS_HEADER* header, bool& bOutOfM
 }
 
 
+// Handles compressed & uncompressed pixel data with DXT10 header
 uint8_t* DDSWrapper::HandleDXT10(FILE* file, const DDS_HEADER* header, bool& bOutOfMemory) {
     DDS_DXT10_HEADER h10;
     fread(&h10, sizeof(DDS_DXT10_HEADER), 1, file);
