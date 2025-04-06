@@ -340,7 +340,7 @@ CEXIFReader::CEXIFReader(void* pApp1Block, EImageFormat eImageFormat)
 	if (pLastIFD0 + 4 - m_pApp1 <= nApp1Size) {
 		nOffsetIFD1 = ReadUInt(pLastIFD0, bLittleEndian);
 		if (nOffsetIFD1 != 0) {
-			if (nOffsetIFD1 < 8 || nOffsetIFD1 >= (uint32)(nApp1Size - 10)) {
+			if (nOffsetIFD1 < 8 || nOffsetIFD1 > (uint32)(nApp1Size - 2)) {
 				nOffsetIFD1 = 0;
 			}
 		}
