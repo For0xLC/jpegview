@@ -7,9 +7,6 @@
 #include "MaxImageDef.h"
 #include <stdexcept>
 
-// Uncomment to build without APNG support
-//#undef PNG_APNG_SUPPORTED
-
 /*
  * Modified from "load4apng.c"
  * Original: https://sourceforge.net/projects/apng/files/libpng/examples/
@@ -73,70 +70,14 @@ struct PngReader::png_cache {
 
 PngReader::png_cache PngReader::cache = { 0 };
 
-#ifdef PNG_APNG_SUPPORTED
-void BlendOver(unsigned char** rows_dst, unsigned char** rows_src, unsigned int x, unsigned int y, unsigned int w, unsigned int h)
-{
-	unsigned int  i, j;
-	int u, v, al;
-
-	for (j = 0; j < h; j++)
-	{
-		unsigned char* sp = rows_src[j];
-		unsigned char* dp = rows_dst[j + y] + x * 4;
-
-		for (i = 0; i < w; i++, sp += 4, dp += 4)
-		{
-			if (sp[3] == 255)
-				memcpy(dp, sp, 4);
-			else if (sp[3] != 0)
-			{
-				if (dp[3] != 0)
-				{
-					u = sp[3] * 255;
-					v = (255 - sp[3]) * dp[3];
-					al = u + v;
-					dp[0] = (sp[0] * u + dp[0] * v) / al;
-					dp[1] = (sp[1] * u + dp[1] * v) / al;
-					dp[2] = (sp[2] * u + dp[2] * v) / al;
-					dp[3] = al / 255;
-				}
-				else
-					memcpy(dp, sp, 4);
-			}
-		}
-	}
-}
-#endif
-
 void* PngReader::ReadNextFrame(void** exif_chunk, png_uint_32* exif_size)
 {
 	unsigned int j;
 	if (exif_chunk != NULL && exif_size != NULL) {
 		png_get_eXIf_1(cache.png_ptr, cache.info_ptr, exif_size, (png_bytep*)exif_chunk);
 	}
-#ifdef PNG_APNG_SUPPORTED
-	if (png_get_valid(cache.png_ptr, cache.info_ptr, PNG_INFO_acTL))
-	{
-		png_read_frame_head(cache.png_ptr, cache.info_ptr);
-		png_get_next_frame_fcTL(cache.png_ptr, cache.info_ptr, &cache.w0, &cache.h0, &cache.x0, &cache.y0, &cache.delay_num, &cache.delay_den, &cache.dop, &cache.bop);
-	}
-	if (cache.frame_index == cache.first)
-	{
-		cache.bop = PNG_BLEND_OP_SOURCE;
-		if (cache.dop == PNG_DISPOSE_OP_PREVIOUS)
-			cache.dop = PNG_DISPOSE_OP_BACKGROUND;
-	}
-#endif
 	png_read_image(cache.png_ptr, cache.rows_frame);
 
-#ifdef PNG_APNG_SUPPORTED
-	if (cache.dop == PNG_DISPOSE_OP_PREVIOUS)
-		memcpy(cache.p_temp, cache.p_image, cache.size);
-
-	if (cache.bop == PNG_BLEND_OP_OVER)
-		BlendOver(cache.rows_image, cache.rows_frame, cache.x0, cache.y0, cache.w0, cache.h0);
-	else
-#endif
 		for (j = 0; j < cache.h0; j++)
 			memcpy(cache.rows_image[j + cache.y0] + cache.x0 * 4, cache.rows_frame[j], cache.w0 * 4);
 
@@ -146,14 +87,6 @@ void* PngReader::ReadNextFrame(void** exif_chunk, png_uint_32* exif_size)
 	for (j = 0; j < cache.height; j++)
 		memcpy((char*)pixels + j * cache.width * cache.channels, cache.rows_image[j], cache.width * cache.channels);
 
-#ifdef PNG_APNG_SUPPORTED
-	if (cache.dop == PNG_DISPOSE_OP_PREVIOUS)
-		memcpy(cache.p_image, cache.p_temp, cache.size);
-	else
-		if (cache.dop == PNG_DISPOSE_OP_BACKGROUND)
-			for (j = 0; j < cache.h0; j++)
-				memset(cache.rows_image[j + cache.y0] + cache.x0 * 4, 0, cache.w0 * 4);
-#endif
 	cache.frame_index++;
 	cache.frame_index %= cache.frame_count;
 	return pixels;
@@ -237,30 +170,13 @@ bool PngReader::BeginReading(void* buffer, size_t sizebytes, bool& outOfMemory)
 			png_uint_32     y0 = 0;
 			png_uint_32     w0 = width;
 			png_uint_32     h0 = height;
-#ifdef PNG_APNG_SUPPORTED
-			png_uint_32     plays = 0;
-			unsigned short  delay_num = 1;
-			unsigned short  delay_den = 10;
-			unsigned char   dop = 0;
-			unsigned char   bop = 0;
-			unsigned int    first = (png_get_first_frame_is_hidden(png_ptr, info_ptr) != 0) ? 1 : 0;
-			if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL))
-				png_get_acTL(png_ptr, info_ptr, &frames, &plays);
-#endif
+
 			for (j = 0; j < height; j++)
 				rows_image[j] = p_image + j * rowbytes;
 
 			for (j = 0; j < height; j++)
 				rows_frame[j] = p_frame + j * rowbytes;
 
-#ifdef PNG_APNG_SUPPORTED
-			cache.bop = bop;
-			// cache.plays = plays
-			cache.delay_den = delay_den;
-			cache.delay_num = delay_num;
-			cache.dop = dop;
-			cache.first = first;
-#endif
 			cache.channels = channels;
 			cache.h0 = h0;
 			cache.height = height;
