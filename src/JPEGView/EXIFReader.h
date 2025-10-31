@@ -58,8 +58,10 @@ public:
 	LPCTSTR GetUserComment() { return m_sUserComment; }
 	LPCTSTR GetImageDescription() { return m_sImageDescription; }
 	LPCTSTR GetSoftware() { return m_sSoftware; }
+	LPCTSTR GetXPComment() { return m_sXPComment; }
 	bool GetCameraModelPresent() { return !m_sModel.IsEmpty(); }
 	bool GetSoftwarePresent() { return !m_sSoftware.IsEmpty(); }
+	bool GetXPCommentPresent() { return !m_sXPComment.IsEmpty(); }
 	// Date-time the picture was taken
 	const SYSTEMTIME& GetAcquisitionTime() { return m_acqDate; }
 	bool GetAcquisitionTimePresent() { return m_acqDate.wYear > 1600; }
@@ -72,6 +74,21 @@ public:
 	// Exposure bias
 	double GetExposureBias() { return m_dExposureBias; }
 	bool GetExposureBiasPresent() { return m_dExposureBias != UNKNOWN_DOUBLE_VALUE; }
+	// Exposure program (0 = Not defined, 1 = Manual, 2 = Normal program, 3 = Aperture priority, 4 = Shutter priority, 5 = Creative program, 6 = Action program, 7 = Portrait mode, 8 = Landscape mode)
+	int GetExposureProgram() { return m_nExposureProgram; }
+	bool GetExposureProgramPresent() { return m_nExposureProgram > 0; }
+	// Metering mode (0 = Unknown, 1 = Average, 2 = CenterWeightedAverage, 3 = Spot, 4 = MultiSpot, 5 = Pattern, 6 = Partial, 255 = other)
+	int GetMeteringMode() { return m_nMeteringMode; }
+	bool GetMeteringModePresent() { return m_nMeteringMode > 0; }
+	// White balance (0 = Auto, 1 = Manual)
+	int GetWhiteBalance() { return m_nWhiteBalance; }
+	bool GetWhiteBalancePresent() { return m_nWhiteBalance > 0; }
+	// Lens model
+	LPCTSTR GetLensModel() { return m_sLensModel; }
+	bool GetLensModelPresent() { return !m_sLensModel.IsEmpty(); }
+	// Scene capture type (0 = Standard, 1 = Landscape, 2 = Portrait, 3 = Night scene)
+	int GetSceneCaptureType() { return m_nSceneCaptureType; }
+	bool GetSceneCaptureTypePresent() { return m_nSceneCaptureType > 0; }
 	// Flag if flash fired
 	bool GetFlashFired() { return m_bFlashFired; }
 	bool GetFlashFiredPresent() { return m_bFlashFlagPresent; }
@@ -120,6 +137,7 @@ private:
 	CString m_sUserComment;
 	CString m_sImageDescription;
 	CString m_sSoftware;
+	CString m_sXPComment;
 	SYSTEMTIME m_acqDate;
 	SYSTEMTIME m_dateTime;
 	Rational m_exposureTime;
@@ -130,6 +148,11 @@ private:
 	double m_dFNumber;
 	int m_nISOSpeed;
 	int m_nImageOrientation;
+	int m_nExposureProgram;
+	int m_nMeteringMode;
+	int m_nWhiteBalance;
+	CString m_sLensModel;
+	int m_nSceneCaptureType;
 	bool m_bHasJPEGCompressedThumbnail;
 	int m_nThumbWidth;
 	int m_nThumbHeight;

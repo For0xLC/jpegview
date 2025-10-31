@@ -19,9 +19,9 @@ static int GetFileNameHeight(HDC dc) {
 static CString CreateGPSString(GPSCoordinate* latitude, GPSCoordinate* longitude) {
 	const int BUFF_SIZE = 96;
 	TCHAR buff[BUFF_SIZE];
-	_stprintf_s(buff, BUFF_SIZE, _T("%.0f° %.0f' %.0f'' %s / %.0f° %.0f' %.0f'' %s"),
-		latitude->Degrees, latitude->Minutes, latitude->Seconds, latitude->GetReference(),
-		longitude->Degrees, longitude->Minutes, longitude->Seconds, longitude->GetReference());
+	_stprintf_s(buff, BUFF_SIZE, _T("%s %.0f° %.0f' %.0f'' / %s %.0f° %.0f' %.0f''"),
+		latitude->GetReference(), latitude->Degrees, latitude->Minutes, latitude->Seconds,
+		longitude->GetReference(), longitude->Degrees, longitude->Minutes, longitude->Seconds);
 	return CString(buff);
 }
 
@@ -145,8 +145,26 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 			if (pEXIFReader->GetCameraModelPresent()) {
 				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Camera model:")), pEXIFReader->GetCameraModel());
 			}
+			if (pEXIFReader->GetLensModelPresent()) {
+				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Lens model:")), pEXIFReader->GetLensModel());
+			}
 			if (pEXIFReader->GetExposureTimePresent()) {
 				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Exposure time (s):")), pEXIFReader->GetExposureTime());
+			}
+			if (pEXIFReader->GetExposureProgramPresent()) {
+				CString sExposureProgram;
+				switch (pEXIFReader->GetExposureProgram()) {
+				case 1: sExposureProgram = CNLS::GetString(_T("Manual")); break;
+				case 2: sExposureProgram = CNLS::GetString(_T("Normal program")); break;
+				case 3: sExposureProgram = CNLS::GetString(_T("Aperture priority")); break;
+				case 4: sExposureProgram = CNLS::GetString(_T("Shutter priority")); break;
+				case 5: sExposureProgram = CNLS::GetString(_T("Creative program")); break;
+				case 6: sExposureProgram = CNLS::GetString(_T("Action program")); break;
+				case 7: sExposureProgram = CNLS::GetString(_T("Portrait mode")); break;
+				case 8: sExposureProgram = CNLS::GetString(_T("Landscape mode")); break;
+				default: sExposureProgram.Format(_T("%d"), pEXIFReader->GetExposureProgram()); break;
+				}
+				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Exposure program:")), sExposureProgram);
 			}
 			if (pEXIFReader->GetExposureBiasPresent()) {
 				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Exposure bias (EV):")), pEXIFReader->GetExposureBias(), 2);
@@ -162,6 +180,33 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 			}
 			if (pEXIFReader->GetISOSpeedPresent()) {
 				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("ISO Speed:")), (int)pEXIFReader->GetISOSpeed());
+			}
+			if (pEXIFReader->GetMeteringModePresent()) {
+				CString sMeteringMode;
+				switch (pEXIFReader->GetMeteringMode()) {
+				case 1: sMeteringMode = CNLS::GetString(_T("Average")); break;
+				case 2: sMeteringMode = CNLS::GetString(_T("Center weighted average")); break;
+				case 3: sMeteringMode = CNLS::GetString(_T("Spot")); break;
+				case 4: sMeteringMode = CNLS::GetString(_T("Multi-spot")); break;
+				case 5: sMeteringMode = CNLS::GetString(_T("Pattern")); break;
+				case 6: sMeteringMode = CNLS::GetString(_T("Partial")); break;
+				case 255: sMeteringMode = CNLS::GetString(_T("Other")); break;
+				default: sMeteringMode.Format(_T("%d"), pEXIFReader->GetMeteringMode()); break;
+				}
+				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Metering mode:")), sMeteringMode);
+			}
+			if (pEXIFReader->GetWhiteBalancePresent()) {
+				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("White balance:")), pEXIFReader->GetWhiteBalance() == 0 ? CNLS::GetString(_T("Auto")) : CNLS::GetString(_T("Manual")));
+			}
+			if (pEXIFReader->GetSceneCaptureTypePresent()) {
+				CString sSceneCapture;
+				switch (pEXIFReader->GetSceneCaptureType()) {
+				case 1: sSceneCapture = CNLS::GetString(_T("Landscape")); break;
+				case 2: sSceneCapture = CNLS::GetString(_T("Portrait")); break;
+				case 3: sSceneCapture = CNLS::GetString(_T("Night scene")); break;
+				default: sSceneCapture = CNLS::GetString(_T("Standard")); break;
+				}
+				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Scene type:")), sSceneCapture);
 			}
 			if (pEXIFReader->GetSoftwarePresent()) {
 				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Software:")), pEXIFReader->GetSoftware());
@@ -214,6 +259,9 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 		}
 	}
 
+	if (CurrentImage()->GetEXIFReader()->GetXPCommentPresent()) {
+		sComment = CurrentImage()->GetEXIFReader()->GetXPComment();
+	}
 	if (sComment == NULL || sComment[0] == 0 || ((std::wstring)sComment).find_first_not_of(L" \t\n\r\f\v", 0) == std::wstring::npos) {
 		sComment = CurrentImage()->GetJPEGComment();
 	}

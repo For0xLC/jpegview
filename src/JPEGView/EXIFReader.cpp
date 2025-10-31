@@ -6,6 +6,7 @@
 double CEXIFReader::UNKNOWN_DOUBLE_VALUE = 283740261.192864;
 
 static uint32 ReadUInt(void * ptr, bool bLittleEndian) {
+	if (ptr == NULL) return 0;
 	uint32 nValue = *((uint32*)ptr);
 	if (!bLittleEndian) {
 		return _byteswap_ulong(nValue);
@@ -15,6 +16,7 @@ static uint32 ReadUInt(void * ptr, bool bLittleEndian) {
 }
 
 static void WriteUInt(void * ptr, uint32 nValue, bool bLittleEndian) {
+	if (ptr == NULL) return;
 	uint32 nVal = nValue;
 	if (!bLittleEndian) {
 		nVal = _byteswap_ulong(nVal);
@@ -23,6 +25,7 @@ static void WriteUInt(void * ptr, uint32 nValue, bool bLittleEndian) {
 }
 
 static uint16 ReadUShort(void * ptr, bool bLittleEndian) {
+	if (ptr == NULL) return 0;
 	uint16 nValue = *((uint16*)ptr);
 	if (!bLittleEndian) {
 		return _byteswap_ushort(nValue);
@@ -32,6 +35,7 @@ static uint16 ReadUShort(void * ptr, bool bLittleEndian) {
 }
 
 static void WriteUShort(void * ptr, uint16 nValue, bool bLittleEndian) {
+	if (ptr == NULL) return;
 	uint16 nVal = nValue;
 	if (!bLittleEndian) {
 		nVal = _byteswap_ushort(nVal);
@@ -40,6 +44,10 @@ static void WriteUShort(void * ptr, uint16 nValue, bool bLittleEndian) {
 }
 
 static uint8* FindTag(uint8* ptr, uint8* ptrLast, uint16 nTag, bool bLittleEndian) {
+	if (ptr == NULL || ptrLast == NULL || ptr >= ptrLast) {
+		return NULL;
+	}
+	
 	while (ptr < ptrLast) {
 		if (ReadUShort(ptr, bLittleEndian) == nTag) {
 			return ptr;
@@ -225,6 +233,33 @@ static double ReadDoubleTag(uint8* ptr, uint8* pTIFFHeader, bool bLittleEndian) 
 	return ReadDoubleTag(ptr, pTIFFHeader, 0, bLittleEndian);
 }
 
+static void ParseUCS2String(CString& strOut, const uint8* pData, uint32 nSize, bool bLittleEndian) {
+	strOut.Empty();
+	if (pData == NULL || nSize < 2) return;
+
+	try {
+		if (bLittleEndian) {
+			strOut = CString((LPCWSTR)pData, nSize / 2);
+		}
+		else {
+			char* pString = new char[nSize];
+			char* pSwap = pString;
+			memcpy(pString, pData, nSize);
+			for (int i = 0; i < nSize / 2; i++) {
+				char t = *pSwap;
+				*pSwap = pSwap[1];
+				pSwap[1] = t;
+				pSwap += 2;
+			}
+			strOut = CString((LPCWSTR)pString, nSize / 2);
+			delete[] pString;
+		}
+	}
+	catch (...) {
+		strOut.Empty();
+	}
+}
+
 bool CEXIFReader::ParseDateString(SYSTEMTIME & date, const CString& str) {
 	int nYear, nMonth, nDay, nHour, nMin, nSec;
 	if (_stscanf(str, _T("%d:%d:%d %d:%d:%d"), &nYear, &nMonth, &nDay, &nHour, &nMin, &nSec) == 6) {
@@ -251,6 +286,10 @@ CEXIFReader::CEXIFReader(void* pApp1Block, EImageFormat eImageFormat)
 	m_dFocalLength = m_dExposureBias = m_dFNumber = UNKNOWN_DOUBLE_VALUE;
 	m_nISOSpeed = 0;
 	m_nImageOrientation = 0;
+	m_nExposureProgram = 0;
+	m_nMeteringMode = 0;
+	m_nWhiteBalance = 0;
+	m_nSceneCaptureType = 0;
 	m_pTagOrientation = NULL;
 	m_bLittleEndian = true;
 	m_nThumbWidth = -1;
@@ -291,10 +330,22 @@ CEXIFReader::CEXIFReader(void* pApp1Block, EImageFormat eImageFormat)
 	uint16 nNumTags = ReadUShort(pIFD0, bLittleEndian);
 	pIFD0 += 2;
 	uint8* pLastIFD0 = pIFD0 + nNumTags*12;
-	if (pLastIFD0 - m_pApp1 + 4 >= nApp1Size) {
+
+	if (pLastIFD0 - m_pApp1 >= nApp1Size) {
 		return;
 	}
-	uint32 nOffsetIFD1 = ReadUInt(pLastIFD0, bLittleEndian);
+
+	// Find IFD1
+	uint32 nOffsetIFD1 = 0;
+	if (pLastIFD0 + 4 - m_pApp1 <= nApp1Size) {
+		nOffsetIFD1 = ReadUInt(pLastIFD0, bLittleEndian);
+		if (nOffsetIFD1 != 0) {
+			if (nOffsetIFD1 < 8 || nOffsetIFD1 >= (uint32)(nApp1Size - 10)) {
+				nOffsetIFD1 = 0;
+			}
+		}
+	}
+
 	m_pLastIFD0 = pLastIFD0;
 
 	// image orientation
@@ -330,6 +381,18 @@ CEXIFReader::CEXIFReader(void* pApp1Block, EImageFormat eImageFormat)
 
 	uint8* pTagSoftware = FindTag(pIFD0, pLastIFD0, 0x0131, bLittleEndian);
 	ReadStringTag(m_sSoftware, pTagSoftware, pTIFFHeader, bLittleEndian);
+
+	uint8* pTagXPComment = FindTag(pIFD0, pLastIFD0, 0x9C9C, bLittleEndian);
+	if (pTagXPComment != NULL) {
+		uint16 nType = ReadUShort(pTagXPComment + 2, bLittleEndian);
+		uint32 nSize = ReadUInt(pTagXPComment + 4, bLittleEndian);
+
+		if (nType == 1 && nSize >= 2 && nSize <= 65536) {
+			LPCSTR pData = (nSize <= 4) ? (LPCSTR)(pTagXPComment + 8) :
+				(LPCSTR)(pTIFFHeader + ReadUInt(pTagXPComment + 8, bLittleEndian));
+			ParseUCS2String(m_sXPComment, (const uint8*)pData, nSize, bLittleEndian);
+		}
+	}
 
 	uint8* pTagModDate = FindTag(pIFD0, pLastIFD0, 0x0132, bLittleEndian);
 	CString sModDate;
@@ -390,16 +453,27 @@ CEXIFReader::CEXIFReader(void* pApp1Block, EImageFormat eImageFormat)
 	m_nISOSpeed = (pTagISOSpeed != NULL) ? ReadShortTag(pTagISOSpeed, bLittleEndian) :
 		ReadLongTag(pTagISOSpeed2, bLittleEndian);
 
+	uint8* pTagExposureProgram = FindTag(pEXIFIFD, pLastEXIF, 0x8822, bLittleEndian);
+	m_nExposureProgram = ReadShortTag(pTagExposureProgram, bLittleEndian);
+
+	uint8* pTagMeteringMode = FindTag(pEXIFIFD, pLastEXIF, 0x9207, bLittleEndian);
+	m_nMeteringMode = ReadShortTag(pTagMeteringMode, bLittleEndian);
+
+	uint8* pTagWhiteBalance = FindTag(pEXIFIFD, pLastEXIF, 0xA403, bLittleEndian);
+	m_nWhiteBalance = ReadShortTag(pTagWhiteBalance, bLittleEndian);
+
+	uint8* pTagSceneCaptureType = FindTag(pEXIFIFD, pLastEXIF, 0xA406, bLittleEndian);
+	m_nSceneCaptureType = ReadShortTag(pTagSceneCaptureType, bLittleEndian);
+
+	uint8* pTagLensModel = FindTag(pEXIFIFD, pLastEXIF, 0xA434, bLittleEndian);
+	ReadStringTag(m_sLensModel, pTagLensModel, pTIFFHeader, bLittleEndian, true);
+
 	uint8* pTagUserComment = FindTag(pEXIFIFD, pLastEXIF, 0x9286, bLittleEndian);
 	ReadUserCommentTag(m_sUserComment, pTagUserComment, pTIFFHeader, bLittleEndian);
 	// Samsung Galaxy puts this useless comment into each JPEG, just ignore
 	if (m_sUserComment == "User comments") {	
 		m_sUserComment = "";
 	}
-
-	// https://exiv2.org/tags.html
-	// uint8* pTagXPComment = FindTag(pIFD0, pLastIFD0, 0x9c9c, bLittleEndian);  // this is the XPComment tag to resolve this issue https://github.com/sylikc/jpegview/issues/72 , but I'm not sure how to decode it
-
 
 	if (nOffsetIFD1 != 0) {
 		m_pIFD1 = pTIFFHeader + nOffsetIFD1;
