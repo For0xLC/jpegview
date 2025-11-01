@@ -1729,10 +1729,23 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS:
 			if (m_pCurrentImage != NULL) {
 				double dZoomForFitToScreen = GetZoomFactorForFitToScreen(nCommand == IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS, true);
-				if (abs(dZoomForFitToScreen - m_dZoom) < 0.001) {
-					ResetZoomTo100Percents(m_bMouseOn);
-				} else {
-					ResetZoomToFitScreen(nCommand == IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS, true, true);
+				if (dZoomForFitToScreen < 1.0) { // The image is larger than the screen. Always go to fit-to-screen, unless we¡¯re already there.
+					if (abs(dZoomForFitToScreen - m_dZoom) < 0.001) {
+						ResetZoomTo100Percents(m_bMouseOn);
+					} else {
+						ResetZoomToFitScreen(nCommand == IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS, true, true);
+					}
+				}
+				else { // The image is smaller than the screen. Always go to 100%, unless we¡¯re already there.
+					if (abs(m_dZoom - 1.0) < 0.01) {
+						ResetZoomToFitScreen(nCommand == IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS, true, true);
+						// ResetToFit does not usually show timer. In this zoom-in case let¡¯s show it.
+						m_bInZooming = true;
+						StartLowQTimer(ZOOM_TIMEOUT);
+					}
+					else {
+						ResetZoomTo100Percents(m_bMouseOn);
+					}
 				}
 			}
 			break;
