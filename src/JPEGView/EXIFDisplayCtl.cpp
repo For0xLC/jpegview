@@ -117,7 +117,15 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 	m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Image width:")), CurrentImage()->OrigWidth());
 	m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Image height:")), CurrentImage()->OrigHeight());
 
-	CString sFileSize = _T("");
+	size_t nPixel = (size_t)(CurrentImage()->OrigWidth() * CurrentImage()->OrigHeight());
+	if (nPixel > 100000) {
+		float nMegaPixel = nPixel / 1000000.0;
+		CString sMegaPixel;
+		sMegaPixel.Format(_T("%.1f %s"), nMegaPixel, _T("MP"));
+		m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Pixels:")), sMegaPixel);
+	}
+
+	CString sFileSize;
 	if (!CurrentImage()->IsClipboardImage() && pFileList->Current() != NULL) {
 		HANDLE hFile = ::CreateFile(pFileList->Current(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 		if (hFile != INVALID_HANDLE_VALUE) {
