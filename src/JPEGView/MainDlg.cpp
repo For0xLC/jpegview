@@ -396,7 +396,7 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	if (!m_bFullScreenMode) {
 		// Window mode, set correct window size
 		SetCurrentWindowStyle();
-		if (!IsAdjustWindowToImage()) {
+		if (!IsAdjustWindowToImage() && !sp.DefaultMaximized() ) {
 			CRect windowRect = CMultiMonitorSupport::GetDefaultWindowRect();
 			this->SetWindowPos(HWND_TOP, windowRect.left, windowRect.top, windowRect.Width(), windowRect.Height(), SWP_NOZORDER | SWP_NOCOPYBITS);
 		} else {
@@ -678,7 +678,7 @@ void CMainDlg::DisplayFileName(const CRect& imageProcessingArea, CDC& dc, double
 }
 
 LRESULT CMainDlg::OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-	bool bKeepFitToScreen = !m_bResizeForNewImage && fabs(m_dZoom - GetZoomFactorForFitToScreen(false, false)) < 0.01;
+	bool bKeepFitToScreen = !m_bResizeForNewImage && abs(m_dZoom - GetZoomFactorForFitToScreen(false, false)) < 0.01;
 	this->GetClientRect(&m_clientRect);
 	this->Invalidate(FALSE);
 	if (m_clientRect.Width() < HelpersGUI::ScaleToScreen(800)) {
@@ -691,7 +691,7 @@ LRESULT CMainDlg::OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BO
 
 	// keep fit to screen
 	if (bKeepFitToScreen) {
-		if (fabs(m_dZoom - GetZoomFactorForFitToScreen(false, false)) >= 0.00001) {
+		if (abs(m_dZoom - GetZoomFactorForFitToScreen(false, false)) >= 0.00001) {
 			StartLowQTimer(ZOOM_TIMEOUT);
 		}
 		ResetZoomToFitScreen(false, false, false);
@@ -1303,7 +1303,7 @@ void CMainDlg::OnExecuteCommand(void* pContext, int nParameter, CButtonCtrl & se
 
 bool CMainDlg::IsCurrentImageFitToScreen(void* pContext) {
 	CMainDlg* pThis = (CMainDlg*)pContext;
-	return fabs(pThis->m_dZoom - pThis->GetZoomFactorForFitToScreen(false, true)) <= 0.01;
+	return abs(pThis->m_dZoom - pThis->GetZoomFactorForFitToScreen(false, true)) <= 0.01;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -1573,7 +1573,7 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 					m_dZoom = -1;
 					m_pCurrentImage->SetIsInParamDB(false);
 					m_pImageProcPanelCtl->ShowHideSaveDBButtons();
-					if (fabs(m_pCurrentImage->GetRotationParams().FreeRotation) > 0.009) {
+					if (abs(m_pCurrentImage->GetRotationParams().FreeRotation) > 0.009) {
 						ReloadImage(false); // free rotation cannot be restored, needs reload
 					}
 					this->Invalidate(FALSE);
@@ -1727,10 +1727,26 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 			break;
 		case IDM_TOGGLE_FIT_TO_SCREEN_100_PERCENTS:
 		case IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS:
-			if (fabs(m_dZoom - 1) < 0.01) {
-				ResetZoomToFitScreen(nCommand == IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS, true, true);
-			} else {
-				ResetZoomTo100Percents(m_bMouseOn);
+			if (m_pCurrentImage != NULL) {
+				double dZoomForFitToScreen = GetZoomFactorForFitToScreen(nCommand == IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS, true);
+				if (dZoomForFitToScreen < 1.0) { // The image is larger than the screen. Always go to fit-to-screen, unless we¡¯re already there.
+					if (abs(dZoomForFitToScreen - m_dZoom) < 0.001) {
+						ResetZoomTo100Percents(m_bMouseOn);
+					} else {
+						ResetZoomToFitScreen(nCommand == IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS, true, true);
+					}
+				}
+				else { // The image is smaller than the screen. Always go to 100%, unless we¡¯re already there.
+					if (abs(m_dZoom - 1.0) < 0.01) {
+						ResetZoomToFitScreen(nCommand == IDM_TOGGLE_FILL_WITH_CROP_100_PERCENTS, true, true);
+						// ResetToFit does not usually show timer. In this zoom-in case let¡¯s show it.
+						m_bInZooming = true;
+						StartLowQTimer(ZOOM_TIMEOUT);
+					}
+					else {
+						ResetZoomTo100Percents(m_bMouseOn);
+					}
+				}
 			}
 			break;
 		case IDM_SPAN_SCREENS:
@@ -1769,7 +1785,11 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 						CSize(MIN_WND_WIDTH, MIN_WND_HEIGHT),
 						defaultWindowRect.Size(),
 						dZoom, m_pCurrentImage, false, true, m_bWindowBorderless);
-				this->SetWindowPos(HWND_TOP, windowRect.left, windowRect.top, windowRect.Width(), windowRect.Height(), SWP_NOZORDER | SWP_NOCOPYBITS);
+				if (sp.DefaultMaximized()) {
+					this->ShowWindow(SW_MAXIMIZE);
+				} else {
+					this->SetWindowPos(HWND_TOP, windowRect.left, windowRect.top, windowRect.Width(), windowRect.Height(), SWP_NOZORDER | SWP_NOCOPYBITS);
+				}
 				this->MouseOn();
 				m_bSpanVirtualDesktop = false;
 			} else {
@@ -2726,7 +2746,7 @@ bool CMainDlg::PerformZoom(double dValue, bool bExponent, bool bZoomToMouse, boo
 
 	m_bInZooming = true;
 	StartLowQTimer(ZOOM_TIMEOUT);
-	if (fabs(dOldZoom - m_dZoom) > 0.0001 || m_bZoomMode) {
+	if (abs(dOldZoom - m_dZoom) > 0.0001 || m_bZoomMode) {
 		this->Invalidate(FALSE);
 		InvalidateHelpDlg();
 		if (bAdjustWindowToImage) {
@@ -2805,7 +2825,7 @@ void CMainDlg::ResetZoomToFitScreen(bool bFillWithCrop, bool bAllowEnlarge, bool
 			}
 			m_bUserZoom = m_dZoom > 1.0;
 			m_bUserPan = false;
-			if (fabs(dOldZoom - m_dZoom) > 0.01) {
+			if (abs(dOldZoom - m_dZoom) > 0.01) {
 				this->Invalidate(FALSE);
 			}
 		}
@@ -2813,7 +2833,7 @@ void CMainDlg::ResetZoomToFitScreen(bool bFillWithCrop, bool bAllowEnlarge, bool
 }
 
 void CMainDlg::ResetZoomTo100Percents(bool bZoomToMouse) {
-	if (m_pCurrentImage != NULL && fabs(m_dZoom - 1) > 0.01) {
+	if (m_pCurrentImage != NULL && abs(m_dZoom - 1) > 0.01) {
 		// the current design (unless changed) cursor always shows in windowed mode, so always zoom to cursor when not fullscreen
 		PerformZoom(1.0, false, bZoomToMouse || !m_bFullScreenMode, true);
 	}
