@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (United States) resources
+// 英语(美国) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -109,14 +109,14 @@ BEGIN
 END
 
 IDD_ABOUT DIALOGEX 8, 7, 243, 142
-STYLE DS_SETFONT | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "",IDC_CLOSE,133,120,104,15
     LTEXT           "",IDC_JPEGVIEW,64,7,163,9,NOT WS_GROUP
-    LTEXT           "Copyright 2006-2018 David Kleiner\nCopyright 2020-2023 Kevin M (sylikc)",IDC_COPYRIGHT,64,17,163,18,NOT WS_GROUP
-    ICON            IDR_MAINFRAME,IDC_ICONJPEGVIEW,12,6,64,64
-    CONTROL         "",IDC_LICENSE,"RichEdit20W",WS_TABSTOP | 0x804,64,68,168,42
+    LTEXT           "Copyright 2006-2018 David Kleiner\nCopyright 2020-2024 Kevin M (sylikc)",IDC_COPYRIGHT,64,17,163,18,NOT WS_GROUP
+    ICON            IDR_MAINFRAME,IDC_ICONJPEGVIEW,12,6,20,20
+    CONTROL         "",IDC_LICENSE,"RichEdit20W",ES_MULTILINE | ES_READONLY | WS_TABSTOP,64,68,168,42
     LTEXT           "",IDC_SIMDMODE,64,36,163,10,NOT WS_GROUP
     LTEXT           "",IDC_NUMCORES,64,49,163,10,NOT WS_GROUP
 END
@@ -236,6 +236,14 @@ END
 GUIDELINES DESIGNINFO
 BEGIN
     IDD_MAINDLG, DIALOG
+    BEGIN
+    END
+
+    IDD_HELP, DIALOG
+    BEGIN
+    END
+
+    IDD_BATCHCOPY, DIALOG
     BEGIN
     END
 
@@ -368,13 +376,13 @@ BEGIN
                 MENUITEM "Very slow",                   IDM_EFFECTTIME_VERY_SLOW
             END
             MENUITEM SEPARATOR
-            MENUITEM "Movie",                           IDM_MOVIE_START_FPS
-            MENUITEM "Playback speed\t5 fps",           IDM_MOVIE_5_FPS
-            MENUITEM "Playback speed\t10 fps",          IDM_MOVIE_10_FPS
-            MENUITEM "Playback speed\t25 fps",          IDM_MOVIE_25_FPS
-            MENUITEM "Playback speed\t30 fps",          IDM_MOVIE_30_FPS
-            MENUITEM "Playback speed\t50 fps",          IDM_MOVIE_50_FPS
-            MENUITEM "Playback speed\t100 fps",         IDM_MOVIE_100_FPS
+            MENUITEM "Movie",                       IDM_MOVIE_START_FPS
+            MENUITEM "Playback speed\t5 fps",       IDM_MOVIE_5_FPS
+            MENUITEM "Playback speed\t10 fps",      IDM_MOVIE_10_FPS
+            MENUITEM "Playback speed\t25 fps",      IDM_MOVIE_25_FPS
+            MENUITEM "Playback speed\t30 fps",      IDM_MOVIE_30_FPS
+            MENUITEM "Playback speed\t50 fps",      IDM_MOVIE_50_FPS
+            MENUITEM "Playback speed\t100 fps",     IDM_MOVIE_100_FPS
         END
         MENUITEM SEPARATOR
         POPUP "Transform image"
@@ -397,7 +405,7 @@ BEGIN
             MENUITEM "Mirror horizontally",         IDM_MIRROR_H_LOSSLESS
             MENUITEM "Mirror vertically",           IDM_MIRROR_V_LOSSLESS
             MENUITEM SEPARATOR
-            MENUITEM "Convert to JXL..."            IDM_CONVERT_JXL
+            MENUITEM "Convert to JXL...",           IDM_CONVERT_JXL
         END
         MENUITEM "Auto correction",             IDM_AUTO_CORRECTION
         MENUITEM "Local density correction",    IDM_LDC
@@ -499,8 +507,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,3,46,0
- PRODUCTVERSION 1,3,46,0
+ FILEVERSION 1,3,46,2
+ PRODUCTVERSION 1,3,46,2
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -517,18 +525,29 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Kevin M (sylikc)"
             VALUE "FileDescription", "JPEGView"
-            VALUE "FileVersion", "1.3.46.0"
+            VALUE "FileVersion", "1.3.46.2"
             VALUE "InternalName", "JPEGView"
-            VALUE "LegalCopyright", "Copyright 2020-2023 Kevin M (sylikc), 2006-2018 David Kleiner"
+            VALUE "LegalCopyright", "Copyright 2020-2024 Kevin M (sylikc), 2006-2018 David Kleiner"
             VALUE "OriginalFilename", "JPEGView.exe"
             VALUE "ProductName", "JPEGView Application"
-            VALUE "ProductVersion", "1.3.46.0"
+            VALUE "ProductVersion", "1.3.46.2"
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
         VALUE "Translation", 0x409, 1200
     END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_ABOUT AFX_DIALOG_LAYOUT
+BEGIN
+    0
 END
 
 
@@ -542,7 +561,7 @@ BEGIN
     IDR_MAINFRAME           "JPEGView"
 END
 
-#endif    // English (United States) resources
+#endif    // 英语(美国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

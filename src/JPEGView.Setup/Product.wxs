@@ -595,91 +595,91 @@
 
 
 					<Component Id="strings.txt" Guid="*">
-						<File Id="strings.txt" Name="strings.txt" Source="$(var.JPEGView.TargetDir)strings.txt" />
+						<File Id="strings.txt" Name="strings.txt" Source="$(var.JPEGView.TargetDir)lang\strings.txt" />
 					</Component>
 					<Component Id="strings_be.txt" Guid="*">
-						<File Id="strings_be.txt" Name="strings_be.txt" Source="$(var.JPEGView.TargetDir)strings_be.txt" />
+						<File Id="strings_be.txt" Name="strings_be.txt" Source="$(var.JPEGView.TargetDir)lang\strings_be.txt" />
 					</Component>
 					<Component Id="strings_bg.txt" Guid="*">
-						<File Id="strings_bg.txt" Name="strings_bg.txt" Source="$(var.JPEGView.TargetDir)strings_bg.txt" />
+						<File Id="strings_bg.txt" Name="strings_bg.txt" Source="$(var.JPEGView.TargetDir)lang\strings_bg.txt" />
 					</Component>
 					<Component Id="strings_cs.txt" Guid="*">
-						<File Id="strings_cs.txt" Name="strings_cs.txt" Source="$(var.JPEGView.TargetDir)strings_cs.txt" />
+						<File Id="strings_cs.txt" Name="strings_cs.txt" Source="$(var.JPEGView.TargetDir)lang\strings_cs.txt" />
 					</Component>
 					<Component Id="strings_de.txt" Guid="*">
-						<File Id="strings_de.txt" Name="strings_de.txt" Source="$(var.JPEGView.TargetDir)strings_de.txt" />
+						<File Id="strings_de.txt" Name="strings_de.txt" Source="$(var.JPEGView.TargetDir)lang\strings_de.txt" />
 					</Component>
 					<Component Id="strings_el.txt" Guid="*">
-						<File Id="strings_el.txt" Name="strings_el.txt" Source="$(var.JPEGView.TargetDir)strings_el.txt" />
+						<File Id="strings_el.txt" Name="strings_el.txt" Source="$(var.JPEGView.TargetDir)lang\strings_el.txt" />
 					</Component>
 					<Component Id="strings_es.txt" Guid="*">
-						<File Id="strings_es.txt" Name="strings_es.txt" Source="$(var.JPEGView.TargetDir)strings_es.txt" />
+						<File Id="strings_es.txt" Name="strings_es.txt" Source="$(var.JPEGView.TargetDir)lang\strings_es.txt" />
 					</Component>
 					<Component Id="strings_esar.txt" Guid="*">
-						<File Id="strings_esar.txt" Name="strings_es-ar.txt" Source="$(var.JPEGView.TargetDir)strings_es-ar.txt" />
+						<File Id="strings_esar.txt" Name="strings_es-ar.txt" Source="$(var.JPEGView.TargetDir)lang\strings_es-ar.txt" />
 					</Component>
 					<Component Id="strings_eu.txt" Guid="*">
-						<File Id="strings_eu.txt" Name="strings_eu.txt" Source="$(var.JPEGView.TargetDir)strings_eu.txt" />
+						<File Id="strings_eu.txt" Name="strings_eu.txt" Source="$(var.JPEGView.TargetDir)lang\strings_eu.txt" />
 					</Component>
 					<Component Id="strings_fi.txt" Guid="*">
-						<File Id="strings_fi.txt" Name="strings_fi.txt" Source="$(var.JPEGView.TargetDir)strings_fi.txt" />
+						<File Id="strings_fi.txt" Name="strings_fi.txt" Source="$(var.JPEGView.TargetDir)lang\strings_fi.txt" />
 					</Component>
 					<Component Id="strings_fr.txt" Guid="*">
-						<File Id="strings_fr.txt" Name="strings_fr.txt" Source="$(var.JPEGView.TargetDir)strings_fr.txt" />
+						<File Id="strings_fr.txt" Name="strings_fr.txt" Source="$(var.JPEGView.TargetDir)lang\strings_fr.txt" />
 					</Component>
 					<Component Id="strings_hu.txt" Guid="*">
-						<File Id="strings_hu.txt" Name="strings_hu.txt" Source="$(var.JPEGView.TargetDir)strings_hu.txt" />
+						<File Id="strings_hu.txt" Name="strings_hu.txt" Source="$(var.JPEGView.TargetDir)lang\strings_hu.txt" />
 					</Component>
 					<Component Id="strings_it.txt" Guid="*">
-						<File Id="strings_it.txt" Name="strings_it.txt" Source="$(var.JPEGView.TargetDir)strings_it.txt" />
+						<File Id="strings_it.txt" Name="strings_it.txt" Source="$(var.JPEGView.TargetDir)lang\strings_it.txt" />
 					</Component>
 					<Component Id="strings_ja.txt" Guid="*">
-						<File Id="strings_ja.txt" Name="strings_ja.txt" Source="$(var.JPEGView.TargetDir)strings_ja.txt" />
+						<File Id="strings_ja.txt" Name="strings_ja.txt" Source="$(var.JPEGView.TargetDir)lang\strings_ja.txt" />
 					</Component>
 					<Component Id="strings_ko.txt" Guid="*">
-						<File Id="strings_ko.txt" Name="strings_ko.txt" Source="$(var.JPEGView.TargetDir)strings_ko.txt" />
+						<File Id="strings_ko.txt" Name="strings_ko.txt" Source="$(var.JPEGView.TargetDir)lang\strings_ko.txt" />
 					</Component>
 					<Component Id="strings_pl.txt" Guid="*">
-						<File Id="strings_pl.txt" Name="strings_pl.txt" Source="$(var.JPEGView.TargetDir)strings_pl.txt" />
+						<File Id="strings_pl.txt" Name="strings_pl.txt" Source="$(var.JPEGView.TargetDir)lang\strings_pl.txt" />
 					</Component>
 					<Component Id="strings_pt.txt" Guid="*">
-						<File Id="strings_pt.txt" Name="strings_pt.txt" Source="$(var.JPEGView.TargetDir)strings_pt.txt" />
+						<File Id="strings_pt.txt" Name="strings_pt.txt" Source="$(var.JPEGView.TargetDir)lang\strings_pt.txt" />
 					</Component>
 					<Component Id="strings_ptbr.txt" Guid="*">
-						<File Id="strings_ptbr.txt" Name="strings_pt-br.txt" Source="$(var.JPEGView.TargetDir)strings_pt-br.txt" />
+						<File Id="strings_ptbr.txt" Name="strings_pt-br.txt" Source="$(var.JPEGView.TargetDir)lang\strings_pt-br.txt" />
 					</Component>
 					<Component Id="strings_ro.txt" Guid="*">
-						<File Id="strings_ro.txt" Name="strings_ro.txt" Source="$(var.JPEGView.TargetDir)strings_ro.txt" />
+						<File Id="strings_ro.txt" Name="strings_ro.txt" Source="$(var.JPEGView.TargetDir)lang\strings_ro.txt" />
 					</Component>
 					<Component Id="strings_ru.txt" Guid="*">
-						<File Id="strings_ru.txt" Name="strings_ru.txt" Source="$(var.JPEGView.TargetDir)strings_ru.txt" />
+						<File Id="strings_ru.txt" Name="strings_ru.txt" Source="$(var.JPEGView.TargetDir)lang\strings_ru.txt" />
 					</Component>
 					<Component Id="strings_sk.txt" Guid="*">
-						<File Id="strings_sk.txt" Name="strings_sk.txt" Source="$(var.JPEGView.TargetDir)strings_sk.txt" />
+						<File Id="strings_sk.txt" Name="strings_sk.txt" Source="$(var.JPEGView.TargetDir)lang\strings_sk.txt" />
 					</Component>
 					<Component Id="strings_sl.txt" Guid="*">
-						<File Id="strings_sl.txt" Name="strings_sl.txt" Source="$(var.JPEGView.TargetDir)strings_sl.txt" />
+						<File Id="strings_sl.txt" Name="strings_sl.txt" Source="$(var.JPEGView.TargetDir)lang\strings_sl.txt" />
 					</Component>
 					<Component Id="strings_sr.txt" Guid="*">
-						<File Id="strings_sr.txt" Name="strings_sr.txt" Source="$(var.JPEGView.TargetDir)strings_sr.txt" />
+						<File Id="strings_sr.txt" Name="strings_sr.txt" Source="$(var.JPEGView.TargetDir)lang\strings_sr.txt" />
 					</Component>
 					<Component Id="strings_sv.txt" Guid="*">
-						<File Id="strings_sv.txt" Name="strings_sv.txt" Source="$(var.JPEGView.TargetDir)strings_sv.txt" />
+						<File Id="strings_sv.txt" Name="strings_sv.txt" Source="$(var.JPEGView.TargetDir)lang\strings_sv.txt" />
 					</Component>
 					<Component Id="strings_ta.txt" Guid="*">
-						<File Id="strings_ta.txt" Name="strings_ta.txt" Source="$(var.JPEGView.TargetDir)strings_ta.txt" />
+						<File Id="strings_ta.txt" Name="strings_ta.txt" Source="$(var.JPEGView.TargetDir)lang\strings_ta.txt" />
 					</Component>
 					<Component Id="strings_tr.txt" Guid="*">
-						<File Id="strings_tr.txt" Name="strings_tr.txt" Source="$(var.JPEGView.TargetDir)strings_tr.txt" />
+						<File Id="strings_tr.txt" Name="strings_tr.txt" Source="$(var.JPEGView.TargetDir)lang\strings_tr.txt" />
 					</Component>
 					<Component Id="strings_uk.txt" Guid="*">
-						<File Id="strings_uk.txt" Name="strings_uk.txt" Source="$(var.JPEGView.TargetDir)strings_uk.txt" />
+						<File Id="strings_uk.txt" Name="strings_uk.txt" Source="$(var.JPEGView.TargetDir)lang\strings_uk.txt" />
 					</Component>
 					<Component Id="strings_zh.txt" Guid="*">
-						<File Id="strings_zh.txt" Name="strings_zh.txt" Source="$(var.JPEGView.TargetDir)strings_zh.txt" />
+						<File Id="strings_zh.txt" Name="strings_zh.txt" Source="$(var.JPEGView.TargetDir)lang\strings_zh.txt" />
 					</Component>
 					<Component Id="strings_zhtw.txt" Guid="*">
-						<File Id="strings_zhtw.txt" Name="strings_zh-tw.txt" Source="$(var.JPEGView.TargetDir)strings_zh-tw.txt" />
+						<File Id="strings_zhtw.txt" Name="strings_zh-tw.txt" Source="$(var.JPEGView.TargetDir)lang\strings_zh-tw.txt" />
 					</Component>
 
 

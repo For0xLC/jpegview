@@ -137,6 +137,7 @@ Error writing file to disk!	写入文件到硬盘错误！
 Example:	范例：
 Exif Date Time:	
 Exposure bias (EV):	曝光补偿（EV）：
+Exposure program:	曝光程序：
 Exposure time (s):	曝光时间（秒）：
 Extension	扩展名
 Extracted number from original file name	从源始文件名中提取编号
@@ -191,6 +192,7 @@ Landscape picture enhancement mode	风景图片增强模式
 Last modification date/time	最后修改日期/时间
 Left	左
 Left mouse & drag	鼠标左键拖动
+Lens model:	镜头型号：
 Licensed under the GNU general public license (GPL), see readme file for details	基于GNU General Public License（GPL）授权，请参阅自述文件的详细信息
 Lighten Shadows	淡化阴影
 Local density correction	局部密度校正
@@ -209,6 +211,7 @@ Margins:	边距：
 Mark image for toggling. Use %s to toggle between marked and current image	标示图片切换。使用 %s 来在标示图片和当前图片之间切换
 Maximize/restore to/from virtual desktop (only for multi-monitor systems)	最大化/还原到/从虚拟桌面（仅适用于多显示器）
 Menu entries:	菜单项目：
+Metering mode:	测光模式：
 Modification date:	修改日期：
 Modifier keys:	复合键：
 Month / Short form (text)	月份/短格式（文字）
@@ -251,6 +254,7 @@ Performing the lossless transformation failed!	执行无损转换失败！
 Performing the transformation failed	执行转换失败
 Perspective Correction	透视校正
 Pixels	像素
+Pixels:	分辨率
 Placeholders:	占位符：
 Portrait	竖
 Press 'OK' to continue with registration or 'Cancel' to abort all registrations.	按下“确定”继续注册或按下“取消”不修改任何注册表内容。
@@ -301,6 +305,7 @@ Save processed image to JPEG file (original size)	保存处理后的图片为JPE
 Save processed image to JPEG file (screen size)	保存处理后的图片为JPEG文件（屏幕大小）
 Save to	保存
 Scaling mode:	放大模式：
+Scene type:	场景模式：
 Screen Pixels	屏幕像素
 Scroll from bottom	从下侧滚动
 Scroll from left	从左侧滚动
@@ -373,6 +378,7 @@ Update user settings with new settings from settings template file?	使用设置
 Use the 'Default Programs' configuration dialog from the operating system instead.	使用操作系统的“默认程序”组态对话框替代。
 Use the mouse to draw a line that shall be horizontal or vertical.	使用鼠标来画一条线，将作为水平线或垂直线。
 Warning	警告
+White balance:	白平衡：
 Width	宽度
 Window mode	窗口模式
 Windows 8 (and above) blocks JPEGView from changing the default program for these file extensions.	Windows8(及更高版本)阻止JPEGView更改这些文件扩展名的默认程序。
