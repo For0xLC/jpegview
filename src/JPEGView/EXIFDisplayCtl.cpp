@@ -211,6 +211,9 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 			if (pEXIFReader->GetSoftwarePresent()) {
 				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Software:")), pEXIFReader->GetSoftware());
 			}
+			if (pEXIFReader->GetXPCommentPresent()) {
+				sComment = pEXIFReader->GetXPComment();
+			}
 		}
 		else if (pRawMetaData != NULL) {
 			if (pRawMetaData->GetAcquisitionTime().wYear > 1985) {
@@ -259,9 +262,6 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 		}
 	}
 
-	if (CurrentImage()->GetEXIFReader()->GetXPCommentPresent()) {
-		sComment = CurrentImage()->GetEXIFReader()->GetXPComment();
-	}
 	if (sComment == NULL || sComment[0] == 0 || ((std::wstring)sComment).find_first_not_of(L" \t\n\r\f\v", 0) == std::wstring::npos) {
 		sComment = CurrentImage()->GetJPEGComment();
 	}
