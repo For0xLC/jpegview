@@ -116,6 +116,28 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 	m_pEXIFDisplay->AddTitle(sFileTitle);
 	m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Image width:")), CurrentImage()->OrigWidth());
 	m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Image height:")), CurrentImage()->OrigHeight());
+
+	CString sFileSize = _T("");
+	if (!CurrentImage()->IsClipboardImage() && pFileList->Current() != NULL) {
+		HANDLE hFile = ::CreateFile(pFileList->Current(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+		if (hFile != INVALID_HANDLE_VALUE) {
+			__int64 fileSize = 0;
+			::GetFileSizeEx(hFile, (PLARGE_INTEGER)&fileSize);
+			::CloseHandle(hFile);
+			if (fileSize > 0) {
+				const TCHAR* units[] = { _T("Bytes"), _T("KB"), _T("MB"), _T("GB") };
+				double value = fileSize;
+				int exponent = 0;
+				while (value >= 1024 && exponent < sizeof(units) / sizeof(units[0]) - 1) {
+					value /= 1024.0;
+					exponent++;
+				}
+				sFileSize.Format(_T("%.1f %s"), value, units[exponent]);
+			}
+		}
+	}
+	m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Size:")), sFileSize);
+
 	if (!CurrentImage()->IsClipboardImage()) {
 		CEXIFReader* pEXIFReader = CurrentImage()->GetEXIFReader();
 		CRawMetadata* pRawMetaData = CurrentImage()->GetRawMetadata();
@@ -176,7 +198,7 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Focal length (mm):")), pEXIFReader->GetFocalLength(), 1);
 			}
 			if (pEXIFReader->GetFNumberPresent()) {
-				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("F-Number:")), pEXIFReader->GetFNumber(), 1);
+				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("𝑓-Number:")), pEXIFReader->GetFNumber(), 1);
 			}
 			if (pEXIFReader->GetISOSpeedPresent()) {
 				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("ISO Speed:")), (int)pEXIFReader->GetISOSpeed());
