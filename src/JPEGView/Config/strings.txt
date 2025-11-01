@@ -136,6 +136,7 @@ Error writing file to disk!
 Example:	
 Exif Date Time:	
 Exposure bias (EV):	
+Exposure program:	
 Exposure time (s):	
 Extension	
 Extracted number from original file name	
@@ -190,6 +191,7 @@ Landscape picture enhancement mode
 Last modification date/time	
 Left	
 Left mouse & drag	
+Lens model:	
 Licensed under the GNU general public license (GPL), see readme file for details	
 Lighten Shadows	
 Local density correction	
@@ -208,6 +210,7 @@ Margins:
 Mark image for toggling. Use %s to toggle between marked and current image	
 Maximize/restore to/from virtual desktop (only for multi-monitor systems)	
 Menu entries:	
+Metering mode:	
 Modification date:	
 Modifier keys:	
 Month / Short form (text)	
@@ -249,7 +252,8 @@ Pasting image from clipboard failed!
 Performing the lossless transformation failed!	
 Performing the transformation failed	
 Perspective Correction	
-Pixels	
+Pixels
+Pixels:	
 Placeholders:	
 Portrait	
 Press 'OK' to continue with registration or 'Cancel' to abort all registrations.	
@@ -300,6 +304,7 @@ Save processed image to JPEG file (original size)
 Save processed image to JPEG file (screen size)	
 Save to	
 Scaling mode:	
+Scene type:	
 Screen Pixels	
 Scroll from bottom	
 Scroll from left	
@@ -372,6 +377,7 @@ Update user settings with new settings from settings template file?
 Use the 'Default Programs' configuration dialog from the operating system instead.	
 Use the mouse to draw a line that shall be horizontal or vertical.	
 Warning	
+White balance:	
 Width	
 Window mode	
 Windows 8 (and above) blocks JPEGView from changing the default program for these file extensions.	
