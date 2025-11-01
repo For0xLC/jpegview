@@ -600,9 +600,12 @@ void* CJPEGImage::Resample(CSize fullTargetSize, CSize clippingSize, CPoint targ
 
 	if (fullTargetSize.cx > 65535 || fullTargetSize.cy > 65535) return NULL;
 
-	if (GetProcessingFlag(eProcFlags, PFLAG_HighQualityResampling) && 
+	// no HQ resampling on upsample.  --maybe it could add to config option!
+	bool bUseHQResampling = GetProcessingFlag(eProcFlags, PFLAG_HighQualityResampling) && eResizeType == DownSample;
+	if (bUseHQResampling &&
 		!(eResizeType == NoResize && (filter == Filter_Downsampling_Best_Quality || filter == Filter_Downsampling_No_Aliasing))) {
 		if (SupportsSIMD(cpu)) {
+			/*
 			if (eResizeType == UpSample) {
 				return CBasicProcessing::SampleUp_HQ_SIMD(fullTargetSize, targetOffset, clippingSize, 
 					CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels, ToSIMDArchitecture(cpu));
@@ -610,7 +613,11 @@ void* CJPEGImage::Resample(CSize fullTargetSize, CSize clippingSize, CPoint targ
 				return CBasicProcessing::SampleDown_HQ_SIMD(fullTargetSize, targetOffset, clippingSize,
 					CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels, dSharpen, filter, ToSIMDArchitecture(cpu));
 			}
+			*/
+			return CBasicProcessing::SampleDown_HQ_SIMD(fullTargetSize, targetOffset, clippingSize,
+				CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels, dSharpen, filter, ToSIMDArchitecture(cpu));
 		} else {
+			/*
 			if (eResizeType == UpSample) {
 				return CBasicProcessing::SampleUp_HQ(fullTargetSize, targetOffset, clippingSize, 
 					CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels);
@@ -618,6 +625,9 @@ void* CJPEGImage::Resample(CSize fullTargetSize, CSize clippingSize, CPoint targ
 				return CBasicProcessing::SampleDown_HQ(fullTargetSize, targetOffset, clippingSize, 
 					CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels, dSharpen, filter);
 			}
+			*/
+			return CBasicProcessing::SampleDown_HQ(fullTargetSize, targetOffset, clippingSize,
+				CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels, dSharpen, filter);
 		}
 	} else {
 		bool bHasRotation = fabs(dRotation) > 1e-3;
