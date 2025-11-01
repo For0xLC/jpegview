@@ -46,6 +46,11 @@ echo + XCopy Config\* ...
 xcopy "%PROJECT_DIR%Config\*" "%OUT_DIR_FULL_PATH%" /Y /C /D
 echo ~ ErrorLevel: %ErrorLevel%
 
+echo + Move strings.txt and strings_*.txt to 'lang' ...
+if not exist "%OUT_DIR_FULL_PATH%lang\" mkdir "%OUT_DIR_FULL_PATH%lang\"
+move "%OUT_DIR_FULL_PATH%strings*.txt" "%OUT_DIR_FULL_PATH%lang\" >nul 2>&1
+echo ~ ErrorLevel: %ErrorLevel%
+
 echo + XCopy LICENSE.txt ...
 xcopy "%PROJECT_DIR%..\..\LICENSE.txt" "%OUT_DIR_FULL_PATH%" /Y /D
 echo ~ ErrorLevel: %ErrorLevel%

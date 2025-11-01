@@ -26,7 +26,8 @@ CString CNLS::GetLocalizedFileName(LPCTSTR sPath, LPCTSTR sPrefixName, LPCTSTR s
 }
 
 CString CNLS::GetStringTableFileName(LPCTSTR sLanguageCode) {
-	return GetLocalizedFileName(CSettingsProvider::This().GetEXEPath(), _T("strings"), _T("txt"), sLanguageCode);
+	CString sLangPath = CString(CSettingsProvider::This().GetEXEPath()) + _T("lang\\");
+	return GetLocalizedFileName(sLangPath, _T("strings"), _T("txt"), sLanguageCode);
 }
 
 // ignores newlines, ignores invalid lines
