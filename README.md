@@ -1,7 +1,10 @@
 # TODO
 
 TODO：
-	1. wait...
+	1. Add support for compression formats.
+	2. Read the code about FileList and improve its implementation.
+	3. Rotate tag in exif info.
+	4. Add controller for animated images.
 
 # JPEGView - Image Viewer and Editor
 
