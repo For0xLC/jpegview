@@ -112,6 +112,7 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 		sFileTitle += Helpers::GetMultiframeIndex(m_pMainDlg->GetCurrentImage());
 	}
 	LPCTSTR sComment = NULL;
+	LPCTSTR sXPComment = NULL;
 	m_pEXIFDisplay->AddPrefix(sPrefix);
 	m_pEXIFDisplay->AddTitle(sFileTitle);
 	m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Image width:")), CurrentImage()->OrigWidth());
@@ -242,7 +243,7 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 				m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Software:")), pEXIFReader->GetSoftware());
 			}
 			if (pEXIFReader->GetXPCommentPresent()) {
-				sComment = pEXIFReader->GetXPComment();
+				sXPComment = pEXIFReader->GetXPComment();
 			}
 		}
 		else if (pRawMetaData != NULL) {
@@ -295,8 +296,12 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 	if (sComment == NULL || sComment[0] == 0 || ((std::wstring)sComment).find_first_not_of(L" \t\n\r\f\v", 0) == std::wstring::npos) {
 		sComment = CurrentImage()->GetJPEGComment();
 	}
-	if (CSettingsProvider::This().ShowJPEGComments() && sComment != NULL && sComment[0] != 0) {
-		m_pEXIFDisplay->SetComment(sComment);
+	if (CSettingsProvider::This().ShowJPEGComments()) {
+		if (sComment != NULL && sComment[0] != 0) {
+			m_pEXIFDisplay->SetComment(sComment);
+		} else if (sXPComment != NULL && sXPComment[0] != 0) {
+			m_pEXIFDisplay->SetComment(sXPComment);
+		}
 	}
 }
 
