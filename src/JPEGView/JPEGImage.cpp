@@ -18,8 +18,6 @@
 // undefine this flag to investigate which optimization might cause that particular failure (TODO)
 #define AVX_SSE_FREEZE_FALLBACK
 
-// No HQ resampling when upsampling
-// #define NO_HQ_UPSAMPLE
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Static helpers
@@ -601,28 +599,19 @@ void* CJPEGImage::Resample(CSize fullTargetSize, CSize clippingSize, CPoint targ
 
 	EFilterType filter = CSettingsProvider::This().DownsamplingFilter();
 
-	if (fullTargetSize.cx > 65535 || fullTargetSize.cy > 65535) return NULL;
+	if (fullTargetSize.cx > 65535 || fullTargetSize.cy > 65535) return nullptr;
 
-	// no HQ resampling on upsample.  --maybe it could add to config option!
-	#ifdef NO_HQ_UPSAMPLE
-	bool bUseHQResampling = GetProcessingFlag(eProcFlags, PFLAG_HighQualityResampling) && eResizeType == DownSample;
-	#else
+	// no HQ resampling on upsampling.
 	bool bUseHQResampling = GetProcessingFlag(eProcFlags, PFLAG_HighQualityResampling);
-	#endif
+	bool bIsUpSample = (eResizeType == UpSample);
+	if (CSettingsProvider::This().HQDownSampleOnly()) {
+		bUseHQResampling = bUseHQResampling && (!bIsUpSample);
+	}
 
 	if (bUseHQResampling &&
 		!(eResizeType == NoResize && (filter == Filter_Downsampling_Best_Quality || filter == Filter_Downsampling_No_Aliasing))) {
-		#ifdef NO_HQ_UPSAMPLE
 		if (SupportsSIMD(cpu)) {
-			return CBasicProcessing::SampleDown_HQ_SIMD(fullTargetSize, targetOffset, clippingSize,
-				CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels, dSharpen, filter, ToSIMDArchitecture(cpu));
-		} else {
-			return CBasicProcessing::SampleDown_HQ(fullTargetSize, targetOffset, clippingSize,
-				CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels, dSharpen, filter);
-		}
-        #else
-		if (SupportsSIMD(cpu)) {
-			if (eResizeType == UpSample) {
+			if (bIsUpSample) {
 				return CBasicProcessing::SampleUp_HQ_SIMD(fullTargetSize, targetOffset, clippingSize,
 					CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels, ToSIMDArchitecture(cpu));
 			} else {
@@ -630,7 +619,7 @@ void* CJPEGImage::Resample(CSize fullTargetSize, CSize clippingSize, CPoint targ
 					CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels, dSharpen, filter, ToSIMDArchitecture(cpu));
 			}
 		} else {
-			if (eResizeType == UpSample) {
+			if (bIsUpSample) {
 				return CBasicProcessing::SampleUp_HQ(fullTargetSize, targetOffset, clippingSize,
 					CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels);
 			} else {
@@ -638,7 +627,6 @@ void* CJPEGImage::Resample(CSize fullTargetSize, CSize clippingSize, CPoint targ
 					CSize(m_nOrigWidth, m_nOrigHeight), m_pOrigPixels, m_nOriginalChannels, dSharpen, filter);
 			}
 		}
-		#endif
 	} else {
 		bool bHasRotation = fabs(dRotation) > 1e-3;
 		if (bHasRotation) {

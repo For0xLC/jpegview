@@ -441,6 +441,7 @@ void CSettingsProvider::ReadWriteableINISettings() {
 	m_bShowNavPanel = GetBool(_T("ShowNavPanel"), true);
 
 	m_bHQRS = GetBool(_T("HighQualityResampling"), true);
+	m_bHQDownSampleOnly = GetBool(_T("HQDownSampleOnly"), false);
 	m_bDefaultSelectionMode = GetBool(_T("DefaultSelectionMode"), true);
 	m_bShowFileName = GetBool(_T("ShowFileName"), false);
 	m_bShowFileInfo = GetBool(_T("ShowFileInfo"), false);
