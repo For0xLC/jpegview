@@ -19,7 +19,7 @@
 #define AVX_SSE_FREEZE_FALLBACK
 
 // No HQ resampling when upsampling
-#define NO_HQ_UPSAMPLE
+// #define NO_HQ_UPSAMPLE
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Static helpers

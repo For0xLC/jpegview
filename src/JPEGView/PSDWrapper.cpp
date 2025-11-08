@@ -266,7 +266,7 @@ CJPEGImage* PsdReader::ReadImage(LPCTSTR strFileName, bool& bOutOfMemory) {
 
             // Calculate buffer sizes
             const int nBytesPerUnit = (nBitDepth == 16) ? 2 : 1;
-            const int nRowSize = Helpers::DoPadding(nWidth * nChannels * nBytesPerUnit, 4);
+            // const int nRowSize = Helpers::DoPadding(nWidth * nChannels * nBytesPerUnit, 4);
             const int nOutputRowSize = Helpers::DoPadding(nWidth * nChannels, 4);
 
             // Allocate output buffer
@@ -288,7 +288,7 @@ CJPEGImage* PsdReader::ReadImage(LPCTSTR strFileName, bool& bOutOfMemory) {
                     nColorMode, nBitDepth);
             }
 
-            ICCProfileTransform::DoTransform(transform, pPixelData, pPixelData, nWidth, nHeight, nRowSize);
+            ICCProfileTransform::DoTransform(transform, pPixelData, pPixelData, nWidth, nHeight, nOutputRowSize);
 
             // Process alpha channel if present
             if (nChannels == 4) {
