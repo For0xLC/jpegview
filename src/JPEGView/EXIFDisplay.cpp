@@ -6,10 +6,11 @@
 #include "NLS.h"
 #include <math.h>
 
-#define BUTTON_SIZE 18
-#define HISTOGRAM_HEIGHT 50
-#define MAX_WIDTH 320
-#define PREFIX_GAP 10
+constexpr auto BUTTON_SIZE = 18;
+constexpr auto HISTOGRAM_HEIGHT = 50;
+constexpr auto MAX_COMMENT_LINES = 4;
+constexpr auto MAX_WIDTH = 480;
+constexpr auto PREFIX_GAP = 10;
 
 static LPTSTR CopyStrAlloc(LPCTSTR str) {
 	if (str == NULL) {
@@ -37,7 +38,10 @@ CEXIFDisplay::CEXIFDisplay(HWND hWnd, INotifiyMouseCapture* pNotifyMouseCapture)
 	m_pos = CPoint(0, 0);
 	m_size = CSize(0, 0);
 	m_sPrefix = NULL;
+	m_nPrefixLength = 0;
 	m_sTitle = NULL;
+	m_nTitleWidth = 0;
+	m_titleIsSingleLine = true;
 	m_sComment = NULL;
 	m_nCommentHeight = 0;
 	m_hTitleFont = 0;
@@ -219,20 +223,36 @@ CRect CEXIFDisplay::PanelRect() {
 
 		int nButtonWidth = (int)(m_fDPIScale * BUTTON_SIZE);
 		bool bNeedsExpansionForButton = (nMaxLength2 - max(nLen1, nLen2)) < nButtonWidth + m_nGap;
-		int nNeededWidthNoBorders = max(nTitleLength, nMaxLength1 + nMaxLength2 + m_nGap) + (bNeedsExpansionForButton ? m_nGap + nButtonWidth : 0);
+		int nContentWidth = max(nTitleLength, nMaxLength1 + nMaxLength2 + m_nGap) + (bNeedsExpansionForButton ? m_nGap + nButtonWidth : 0);
+		
 		int nExpansionX = 0, nExpansionY = 0;
 		if (m_bShowHistogram) {
-			nExpansionX = max(0, HelpersGUI::ScaleToScreen(256) - nNeededWidthNoBorders);
+			nExpansionX = max(0, HelpersGUI::ScaleToScreen(256) - nContentWidth);
 			nExpansionY = HelpersGUI::ScaleToScreen(HISTOGRAM_HEIGHT) + m_nGap;
 		}
 
-		m_size = CSize(nNeededWidthNoBorders + m_nGap*2 + nExpansionX, 
-			m_nTitleHeight + (int)m_lines.size()*m_nLineHeight + m_nGap * 2 + nExpansionY);
+		nContentWidth += m_nGap * 2 + nExpansionX;
 
-		if (m_sComment != NULL) {
-			CRect rectComment(0, 0, m_size.cx - m_nGap*2, HelpersGUI::ScaleToScreen(200));
-			::DrawText(dc, m_sComment, (int)_tcslen(m_sComment), &rectComment, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK | DT_WORD_ELLIPSIS);
-			m_nCommentHeight = min(3 * m_nLineHeight, rectComment.Height());
+		bool bHasComment = (m_sComment != NULL);
+		if (bHasComment) {
+			CRect rectComment(0, 0, nContentWidth - m_nGap*2, INT_MAX);
+			::DrawText(dc, m_sComment, (int)_tcslen(m_sComment), &rectComment, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK);
+			int nCommentHeight = rectComment.Height();
+			int nMaxCommentHeight = MAX_COMMENT_LINES * m_nLineHeight;
+			if (nCommentHeight > nMaxCommentHeight) {
+				CRect rectCommentMax(0, 0, HelpersGUI::ScaleToScreen(MAX_WIDTH) - m_nGap*2, INT_MAX);
+				::DrawText(dc, m_sComment, (int)_tcslen(m_sComment), &rectCommentMax, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK);
+				nContentWidth = HelpersGUI::ScaleToScreen(MAX_WIDTH);
+				m_nCommentHeight = min(nMaxCommentHeight, rectCommentMax.Height());
+			} else {
+				m_nCommentHeight = nCommentHeight;
+			}
+		}
+
+		m_size = CSize(nContentWidth,
+			m_nTitleHeight + (int)m_lines.size()*m_nLineHeight + m_nGap*2 + nExpansionY);
+
+		if (bHasComment) {
 			m_size.cy += (m_nGap >> 1) + m_nCommentHeight;
 		}
 
