@@ -241,11 +241,8 @@
 			<Feature Id="ConfigFiles" Title="Config Files" Absent="disallow">
 				<ComponentRef Id="JPEGView.ini"/>
 				<ComponentRef Id="JPEGView.ini.tpl"/>
-				<ComponentRef Id="JPEGView_ru.ini"/>
-				<ComponentRef Id="JPEGView_ru.ini.tpl"/>
 				<ComponentRef Id="KeyMap.txt.default"/>
 				<ComponentRef Id="symbols.km"/>
-				<!-- <ComponentRef Id="KeyMap_ru.txt"/> -->
 			</Feature>
 			<Feature Id="Docs" Title="Documentation">
 				<ComponentRef Id="LICENSE.txt"/>
@@ -556,23 +553,12 @@
 					<Component Id="JPEGView.ini.tpl" Guid="*">
 						<File Id="JPEGView.ini.tpl" Name="JPEGView.ini.tpl" Source="$(var.JPEGView.TargetDir)JPEGView.ini.tpl" />
 					</Component>
-					<Component Id="JPEGView_ru.ini" Guid="*">
-						<File Id="JPEGView_ru.ini" Name="JPEGView_ru.ini" Source="$(var.JPEGView.TargetDir)JPEGView_ru.ini" />
-					</Component>
-					<Component Id="JPEGView_ru.ini.tpl" Guid="*">
-						<File Id="JPEGView_ru.ini.tpl" Name="JPEGView_ru.ini.tpl" Source="$(var.JPEGView.TargetDir)JPEGView_ru.ini.tpl" />
-					</Component>
 					<Component Id="KeyMap.txt.default" Guid="*">
 						<File Id="KeyMap.txt.default" Name="KeyMap.txt.default" Source="$(var.JPEGView.TargetDir)KeyMap.txt.default" />
 					</Component>
 					<Component Id="symbols.km" Guid="*">
 						<File Id="symbols.km" Name="symbols.km" Source="$(var.JPEGView.TargetDir)symbols.km" />
 					</Component>
-					<!--
-					<Component Id="KeyMap_ru.txt" Guid="*">
-						<File Id="KeyMap_ru.txt" Name="KeyMap_ru.txt" Source="$(var.JPEGView.TargetDir)KeyMap_ru.txt" />
-					</Component>
-					-->
 
 					<Component Id="LICENSE.txt" Guid="*">
 						<File Id="LICENSE.txt" Name="LICENSE.txt" Source="$(var.JPEGView.TargetDir)LICENSE.txt" />
