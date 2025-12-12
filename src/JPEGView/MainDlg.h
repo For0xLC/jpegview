@@ -223,6 +223,7 @@ public:
 	static bool IsCurrentImageFitToScreen(void* pContext);
 
 private:
+	CBrush m_bBackBrush; // brush to paint dialog background
 
 	CString m_sStartupFile; // file passed on command line
 	int m_nAutoStartSlideShow; // if positive: Auto start slide show with given interval in seconds, passed on command line

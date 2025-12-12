@@ -180,6 +180,11 @@ CMainDlg::CMainDlg(bool bForceFullScreen) {
 	// Read the string table for the requested language if one is present
 	CNLS::ReadStringTable(CNLS::GetStringTableFileName(sp.Language()));
 
+	// Create background brush
+	COLORREF backColor = sp.ColorBackground();
+	if (backColor == 0) backColor = RGB(0, 0, 1); // nVidia's bug
+	m_bBackBrush.CreateSolidBrush(backColor);
+
 	m_bLandscapeMode = sp.LandscapeMode();
 	m_pImageProcParams = new CImageProcessingParams(GetDefaultProcessingParams());
 	InitFromProcessingFlags(GetDefaultProcessingFlags(m_bLandscapeMode), m_bHQResampling, m_bAutoContrast, m_bAutoContrastSection, m_bLDC, m_bLandscapeMode);
@@ -313,7 +318,14 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	CPaintDC dc(this->m_hWnd);
 	HelpersGUI::ScreenScaling = ::GetDeviceCaps(dc, LOGPIXELSX)/96.0f;
 
+	// Replace default GCLP_HBRBACKGROUND
+	::SetClassLongPtr(m_hWnd, GCLP_HBRBACKGROUND, (LONG_PTR)m_bBackBrush.m_hBrush);
+
 	::SetClassLongPtr(m_hWnd, GCLP_HCURSOR, NULL);
+
+	// Show window in advance to avoid flash
+	ShowWindow(SW_SHOW);
+	ShowWindow(SW_HIDE);
 
 	m_pDirectoryWatcher = new CDirectoryWatcher(m_hWnd);
 
@@ -458,8 +470,7 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 	this->GetClientRect(&m_clientRect);
 	CRect imageProcessingArea = m_pImageProcPanelCtl->PanelRect();
 	CRectF visRectZoomNavigator(0.0f, 0.0f, 1.0f, 1.0f);
-	CBrush backBrush;
-	backBrush.CreateSolidBrush(CSettingsProvider::This().ColorBackground());
+	CBrush& backBrush = m_bBackBrush;
 
 #ifdef DEBUG
 	CString a; a.Format(_T("client rect w/h pix: %d %d = %d\n"), m_clientRect.Width(), m_clientRect.Height(), m_clientRect.Width() * m_clientRect.Height());
@@ -584,11 +595,8 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 }
 
 void CMainDlg::PaintToDC(CDC& dc) {
-	COLORREF backColor = CSettingsProvider::This().ColorBackground();
-	if (backColor == 0)
-		backColor = RGB(0, 0, 1); // these f**ing nVidia drivers have a bug when blending pure black
-	CBrush backBrush;
-	backBrush.CreateSolidBrush(backColor);
+	CBrush& backBrush = m_bBackBrush;
+
 	m_dRealizedZoom = 1.0;
 
 	CJPEGImage* pCurrentImage = GetCurrentImage();
@@ -1278,7 +1286,12 @@ LRESULT CMainDlg::OnCtlColorEdit(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/
 }
 
 LRESULT CMainDlg::OnEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-	// prevent erasing background
+	// Set background color to prevent flush
+	HDC hdc = (HDC)wParam;
+	CRect rect;
+	GetClientRect(&rect);
+	FillRect(hdc, &rect, m_bBackBrush.m_hBrush);
+
 	bHandled = TRUE;
 	return TRUE;
 }
