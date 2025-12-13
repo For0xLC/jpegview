@@ -11,7 +11,7 @@ public:
 	CEXIFDisplayCtl(CMainDlg* pMainDlg, CPanel* pImageProcPanel);
 	virtual ~CEXIFDisplayCtl();
 
-	virtual float DimFactor() { return 0.5f; }
+	virtual float DimFactor() { return m_fDimFactor; }
 
 	virtual bool IsVisible();
 	virtual bool IsActive() { return m_bVisible; }
@@ -26,6 +26,7 @@ public:
 
 private:
 	bool m_bVisible;
+	float m_fDimFactor;
 	CEXIFDisplay* m_pEXIFDisplay;
 	CPanel* m_pImageProcPanel;
 	int m_nFileNameHeight;

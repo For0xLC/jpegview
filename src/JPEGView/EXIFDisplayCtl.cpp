@@ -50,6 +50,7 @@ static CString CreateGPSURL(GPSCoordinate* latitude, GPSCoordinate* longitude) {
 
 CEXIFDisplayCtl::CEXIFDisplayCtl(CMainDlg* pMainDlg, CPanel* pImageProcPanel) : CPanelController(pMainDlg, false) {
 	m_bVisible = CSettingsProvider::This().ShowFileInfo();
+	m_fDimFactor = CSettingsProvider::This().ExifBoxDimFactor();
 	m_nFileNameHeight = 0;
 	m_pImageProcPanel = pImageProcPanel;
 	m_pPanel = m_pEXIFDisplay = new CEXIFDisplay(pMainDlg->m_hWnd, this);
@@ -57,6 +58,10 @@ CEXIFDisplayCtl::CEXIFDisplayCtl(CMainDlg* pMainDlg, CPanel* pImageProcPanel) : 
 	CButtonCtrl* pCloseBtn = m_pEXIFDisplay->GetControl<CButtonCtrl*>(CEXIFDisplay::ID_btnClose);
 	pCloseBtn->SetButtonPressedHandler(&OnClose, this);
 	pCloseBtn->SetShow(false);
+
+	m_pEXIFDisplay->SetIsWidthFixed(CSettingsProvider::This().ExifBoxFixedWidth());
+	m_pEXIFDisplay->SetMaxWidth(HelpersGUI::ScaleToScreen(CSettingsProvider::This().ExifBoxMaxWidth()));
+	m_pEXIFDisplay->SetCommentMaxLines(CSettingsProvider::This().CommentMaxLines());
 	m_pEXIFDisplay->SetShowHistogram(CSettingsProvider::This().ShowHistogram());
 }
 

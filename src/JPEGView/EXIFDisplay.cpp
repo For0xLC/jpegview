@@ -6,9 +6,6 @@
 #include "NLS.h"
 #include <math.h>
 
-constexpr bool FIXED_WIDTH = false;
-constexpr auto MAX_WIDTH = 360;
-constexpr auto MAX_COMMENT_LINES = 4;
 constexpr auto BUTTON_SIZE = 18;
 
 static LPTSTR CopyStrAlloc(LPCTSTR str)
@@ -32,8 +29,8 @@ static CRect InflateRect(const CRect& rect, float fAmount)
 
 CEXIFDisplay::CEXIFDisplay(HWND hWnd, INotifiyMouseCapture* pNotifyMouseCapture) : CPanel(hWnd, pNotifyMouseCapture, true, true)
 {
-	m_bFixedWidth = FIXED_WIDTH;
-	m_nMaxWidth = HelpersGUI::ScaleToScreen(MAX_WIDTH);
+	m_bFixedWidth = false;
+	m_nMaxWidth = 0;
 	m_nContentMaxWidth = 0;
 
 	m_nGap = (int)(m_fDPIScale * 10);
@@ -53,7 +50,7 @@ CEXIFDisplay::CEXIFDisplay(HWND hWnd, INotifiyMouseCapture* pNotifyMouseCapture)
 	m_sComment = NULL;
 	m_nCommentWidth = 0;
 	m_nCommentHeight = 0;
-	m_nCommentMaxLines = MAX_COMMENT_LINES;
+	m_nCommentMaxLines = 0;
 
 	m_lines = {};
 	m_nLineHeight = 0;
@@ -93,7 +90,6 @@ void CEXIFDisplay::ClearTexts()
 
 	m_nCommentWidth = 0;
 	m_nCommentHeight = 0;
-	m_nCommentMaxLines = MAX_COMMENT_LINES;
 
 	m_nLineHeight = 0;
 

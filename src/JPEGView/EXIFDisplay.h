@@ -42,6 +42,11 @@ public:
 
 	virtual void OnPaint(CDC & dc, const CPoint& offset);
 
+	void SetIsWidthFixed(bool bFixed) { m_bFixedWidth = bFixed; } 
+	void SetMaxWidth(int nWidth) { m_nMaxWidth = nWidth; }
+	
+	void SetCommentMaxLines(int n) { m_nCommentMaxLines = n; }
+
 	void SetShowHistogram(bool bShow) { m_bShowHistogram = bShow; RepositionAll(); }
 	bool GetShowHistogram() { return m_bShowHistogram; }
 

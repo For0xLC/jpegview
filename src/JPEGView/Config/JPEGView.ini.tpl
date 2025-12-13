@@ -425,8 +425,22 @@ FileNameFont=Default
 ; Set to true to initially display the file info box (EXIF info if available)
 ShowFileInfo=false
 
+; Factor to change the background color of the info box. Must be in 0 .. 1
+ExifBoxDimFactor=0.5
+
+; Set to true to fix the width of the info box
+; If false, the width of the info box varies within the limit of 'ExifBoxMaxWidth'
+ExifBoxFixedWidth=false
+
+; Max width of the info box. It's recommanded to set this larger than 300 (Logical Pixel)
+ExifBoxMaxWidth=360
+
 ; Set to true to show JPEG comments (EXIF user comment, EXIF image description or JPEG comment) in the file info box
 ShowJPEGComments=true
+
+; Max lines of the comment in the info box
+; Set to -1 means no limit
+CommentMaxLines=4
 
 ; Set to true to show the histogram on the file info panel by default
 ShowHistogram=false

@@ -33,6 +33,10 @@ public:
 	bool DefaultSelectionMode() { return m_bDefaultSelectionMode; }
 	bool ShowFileName() { return m_bShowFileName; }
 	bool ShowFileInfo() { return m_bShowFileInfo; }
+	float ExifBoxDimFactor() { return m_fExifBoxDimFactor; }
+	bool ExifBoxFixedWidth() { return m_bExifBoxFixedWidth; }
+	int ExifBoxMaxWidth() { return m_nExifBoxMaxWidth; }
+	int CommentMaxLines() { return m_nCommentMaxLines; }
 	bool ShowEXIFDateInTitle() { return m_bShowEXIFDateInTitle; }
 	bool ShowFullPathInTitle() { return m_bShowFullPathInTitle; }
 	bool ShowHistogram() { return m_bShowHistogram; }
@@ -207,6 +211,10 @@ private:
 	bool m_bDefaultSelectionMode;
 	bool m_bShowFileName;
 	bool m_bShowFileInfo;
+	float m_fExifBoxDimFactor;
+	bool m_bExifBoxFixedWidth;
+	int m_nExifBoxMaxWidth;
+	int m_nCommentMaxLines;
 	bool m_bShowEXIFDateInTitle;
 	bool m_bShowFullPathInTitle;
 	bool m_bShowHistogram;
