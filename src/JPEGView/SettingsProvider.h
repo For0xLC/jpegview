@@ -33,6 +33,7 @@ public:
 	bool DefaultSelectionMode() { return m_bDefaultSelectionMode; }
 	bool ShowFileName() { return m_bShowFileName; }
 	bool ShowFileInfo() { return m_bShowFileInfo; }
+	bool ShowBasicInfo() { return m_bShowBasicInfo; }
 	float ExifBoxDimFactor() { return m_fExifBoxDimFactor; }
 	bool ExifBoxFixedWidth() { return m_bExifBoxFixedWidth; }
 	int ExifBoxMaxWidth() { return m_nExifBoxMaxWidth; }
@@ -211,6 +212,7 @@ private:
 	bool m_bDefaultSelectionMode;
 	bool m_bShowFileName;
 	bool m_bShowFileInfo;
+	bool m_bShowBasicInfo;
 	float m_fExifBoxDimFactor;
 	bool m_bExifBoxFixedWidth;
 	int m_nExifBoxMaxWidth;

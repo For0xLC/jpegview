@@ -102,6 +102,10 @@ void CEXIFDisplayCtl::OnPrePaintMainDlg(HDC hPaintDC) {
 }
 
 void CEXIFDisplayCtl::FillEXIFDataDisplay() {
+	// TODO: Improved Exif Data Manager
+	// TODO: Remove 'bBasic', 'goto', 'exif_out:'
+	bool bBasic = CSettingsProvider::This().ShowBasicInfo();
+	
 	m_pEXIFDisplay->ClearTexts();
 
 	m_pEXIFDisplay->SetHistogram(NULL);
@@ -124,7 +128,7 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 	m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Image height:")), CurrentImage()->OrigHeight());
 
 	size_t nPixel = (size_t)(CurrentImage()->OrigWidth() * CurrentImage()->OrigHeight());
-	if (nPixel > 100000) {
+	if (!bBasic && nPixel > 100000) {
 		float nMegaPixel = nPixel / 1000000.0;
 		CString sMegaPixel;
 		sMegaPixel.Format(_T("%.1f %s"), nMegaPixel, _T("MP"));
@@ -170,6 +174,7 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 					m_pEXIFDisplay->AddLine(CNLS::GetString(_T("Modification date:")), *pFileTime);
 				}
 			}
+			if (bBasic) goto exif_out;
 			if (pEXIFReader->IsGPSInformationPresent()) {
 				CString sGPSLocation = CreateGPSString(pEXIFReader->GetGPSLatitude(), pEXIFReader->GetGPSLongitude());
 				m_pEXIFDisplay->SetGPSLocation(sGPSLocation, CreateGPSURL(pEXIFReader->GetGPSLatitude(), pEXIFReader->GetGPSLongitude()));
@@ -297,7 +302,7 @@ void CEXIFDisplayCtl::FillEXIFDataDisplay() {
 			}
 		}
 	}
-
+	exif_out:
 	if (sComment == NULL || sComment[0] == 0 || ((std::wstring)sComment).find_first_not_of(L" \t\n\r\f\v", 0) == std::wstring::npos) {
 		sComment = CurrentImage()->GetJPEGComment();
 	}

@@ -114,6 +114,7 @@ CSettingsProvider::CSettingsProvider(void) {
 	m_bShowFullScreen = m_bAutoFullScreen ? true : GetBool(_T("ShowFullScreen"), true);
 	m_bShowEXIFDateInTitle = GetBool(_T("ShowEXIFDateInTitle"), true);
 	m_bShowFullPathInTitle = GetBool(_T("ShowFilePathInTitle"), false);
+	m_bShowBasicInfo = GetBool(_T("ShowBasicInfo"), false);
 	m_fExifBoxDimFactor = (float)GetDouble(_T("ExifBoxDimFactor"), 0.5, 0.0, 1.0);
 	m_bExifBoxFixedWidth = GetBool(_T("ExifBoxFixedWidth"), false);
 	m_nExifBoxMaxWidth = GetInt(_T("ExifBoxMaxWidth"), 360, 0, INT_MAX);
