@@ -15,6 +15,7 @@ public:
 		ID_btnClose,
 		ID_urlLocation
 	};
+
 public:
 	CEXIFDisplay(HWND hWnd, INotifiyMouseCapture* pNotifyMouseCapture);
 	~CEXIFDisplay();
@@ -32,9 +33,13 @@ public:
 	void AddLine(LPCTSTR sDescription, const FILETIME &time); // file time is in UTC
 	void AddLine(LPCTSTR sDescription, const Rational &number);
 
-	void SetPosition(CPoint pos) { m_pos = pos; RepositionAll(); }
-	virtual CRect PanelRect();
 	virtual void RequestRepositioning();
+	void SetPosition(CPoint pos) { m_pos = pos; RepositionAll(); }
+
+	virtual CRect PanelRect();
+	CRect PanelRectFixed();
+	CRect PanelRectVariable();
+
 	virtual void OnPaint(CDC & dc, const CPoint& offset);
 
 	void SetShowHistogram(bool bShow) { m_bShowHistogram = bShow; RepositionAll(); }
@@ -47,7 +52,6 @@ protected:
 	virtual void RepositionAll();
 
 private:
-
 	struct TextLine {
 		TextLine(LPCTSTR desc, LPCTSTR value, bool valueIsURL = false) {
 			Desc = desc;
@@ -60,24 +64,36 @@ private:
 		bool ValueIsURL;
 	};
 
-	bool m_bShowHistogram;
+	bool m_bFixedWidth;
+	int m_nMaxWidth;
+	int m_nContentMaxWidth;
+
 	int m_nGap;
 	int m_nTab1;
-	int m_nLineHeight;
-	int m_nTitleWidth;
-	int m_nTitleHeight;
-	int m_nPrefixLength;
-	CSize m_nNoHistogramSize;
 	CPoint m_pos;
 	CSize m_size;
-	HFONT m_hTitleFont;
+
 	TCHAR* m_sPrefix;
+	int m_nPrefixWidth;
+
 	TCHAR* m_sTitle;
+	int m_nTitleWidth;
+	int m_nTitleHeight;
+	HFONT m_hTitleFont;
+	// bool m_bTitleSingleLine;
+
 	TCHAR* m_sComment;
-	int m_nCommentHeight; 
+	int m_nCommentWidth;
+	int m_nCommentHeight;
+	int m_nCommentMaxLines;
+
 	std::list<TextLine> m_lines;
+	int m_nLineHeight;
+
+	bool m_bShowHistogram;
+	int m_nHistogramWidth;
+	int m_nHistogramHeight;
 	const CHistogram* m_pHistogram;
-	bool m_titleIsSingleLine;
 
 	void PaintHistogram(CDC & dc, int nXStart, int nYBaseLine);
 

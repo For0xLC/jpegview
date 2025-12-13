@@ -6,13 +6,13 @@
 #include "NLS.h"
 #include <math.h>
 
-constexpr auto BUTTON_SIZE = 18;
-constexpr auto HISTOGRAM_HEIGHT = 50;
+constexpr bool FIXED_WIDTH = false;
+constexpr auto MAX_WIDTH = 360;
 constexpr auto MAX_COMMENT_LINES = 4;
-constexpr auto MAX_WIDTH = 480;
-constexpr auto PREFIX_GAP = 10;
+constexpr auto BUTTON_SIZE = 18;
 
-static LPTSTR CopyStrAlloc(LPCTSTR str) {
+static LPTSTR CopyStrAlloc(LPCTSTR str)
+{
 	if (str == NULL) {
 		return NULL;
 	}
@@ -22,30 +22,45 @@ static LPTSTR CopyStrAlloc(LPCTSTR str) {
 	return pNewStr;
 }
 
-static CRect InflateRect(const CRect& rect, float fAmount) {
+static CRect InflateRect(const CRect& rect, float fAmount)
+{
 	CRect r(rect);
 	int nAmount = (int)(fAmount * r.Width());
 	r.InflateRect(-nAmount, -nAmount);
 	return r;
 }
 
-CEXIFDisplay::CEXIFDisplay(HWND hWnd, INotifiyMouseCapture* pNotifyMouseCapture) : CPanel(hWnd, pNotifyMouseCapture, true, true) {
-	m_bShowHistogram = false;
+CEXIFDisplay::CEXIFDisplay(HWND hWnd, INotifiyMouseCapture* pNotifyMouseCapture) : CPanel(hWnd, pNotifyMouseCapture, true, true)
+{
+	m_bFixedWidth = FIXED_WIDTH;
+	m_nMaxWidth = HelpersGUI::ScaleToScreen(MAX_WIDTH);
+	m_nContentMaxWidth = 0;
+
 	m_nGap = (int)(m_fDPIScale * 10);
 	m_nTab1 = 0;
-	m_nLineHeight = 0;
-	m_nTitleHeight = 0;
 	m_pos = CPoint(0, 0);
 	m_size = CSize(0, 0);
+
 	m_sPrefix = NULL;
-	m_nPrefixLength = 0;
+	m_nPrefixWidth = 0;
+
 	m_sTitle = NULL;
 	m_nTitleWidth = 0;
-	m_titleIsSingleLine = true;
-	m_sComment = NULL;
-	m_nCommentHeight = 0;
+	m_nTitleHeight = 0;
 	m_hTitleFont = 0;
-	m_nNoHistogramSize = CSize(0, 0);
+	// m_bTitleSingleLine = true;
+
+	m_sComment = NULL;
+	m_nCommentWidth = 0;
+	m_nCommentHeight = 0;
+	m_nCommentMaxLines = MAX_COMMENT_LINES;
+
+	m_lines = {};
+	m_nLineHeight = 0;
+
+	m_bShowHistogram = false;
+	m_nHistogramWidth = HelpersGUI::ScaleToScreen(256);
+	m_nHistogramHeight = HelpersGUI::ScaleToScreen(50);
 	m_pHistogram = NULL;
 
 	AddUserPaintButton(ID_btnShowHideHistogram, &ShowHistogramTooltip, &PaintShowHistogramBtn, NULL, this, this);
@@ -54,25 +69,37 @@ CEXIFDisplay::CEXIFDisplay(HWND hWnd, INotifiyMouseCapture* pNotifyMouseCapture)
 	pLinkLocation->SetShow(false, false);
 }
 
-CEXIFDisplay::~CEXIFDisplay() {
+CEXIFDisplay::~CEXIFDisplay()
+{
 	ClearTexts();
-	if (m_hTitleFont != 0) {
+	if (m_hTitleFont != 0)
+	{
 		::DeleteObject(m_hTitleFont);
 	}
 }
 
-void CEXIFDisplay::ClearTexts() {
+void CEXIFDisplay::ClearTexts()
+{
 	delete[] m_sPrefix;
 	m_sPrefix = NULL;
 	delete[] m_sTitle;
 	m_sTitle = NULL;
 	delete[] m_sComment;
 	m_sComment = NULL;
-	m_nCommentHeight = 0;
-	m_nPrefixLength = 0;
+
+	m_nPrefixWidth = 0;
 	m_nTitleWidth = 0;
+	m_nTitleHeight = 0;
+
+	m_nCommentWidth = 0;
+	m_nCommentHeight = 0;
+	m_nCommentMaxLines = MAX_COMMENT_LINES;
+
+	m_nLineHeight = 0;
+
 	std::list<TextLine>::iterator iter;
-	for (iter = m_lines.begin( ); iter != m_lines.end( ); iter++ ) {
+	for (iter = m_lines.begin( ); iter != m_lines.end( ); iter++ )
+	{
 		delete[] iter->Desc;
 		delete[] iter->Value;
 	}
@@ -159,115 +186,282 @@ void CEXIFDisplay::AddLine(LPCTSTR sDescription, const Rational &number) {
 	}
 }
 
-CRect CEXIFDisplay::PanelRect() {
-	if (m_nLineHeight == 0) {
+void CEXIFDisplay::RequestRepositioning()
+{
+	m_nLineHeight = 0;
+}
+
+CRect CEXIFDisplay::PanelRect()
+{
+	if (m_nLineHeight != 0)
+	{
+		return CRect(m_pos, m_size);
+	}
+
+	return m_bFixedWidth ? PanelRectFixed() : PanelRectVariable();
+}
+
+CRect CEXIFDisplay::PanelRectFixed()
+{
+	if (m_nLineHeight == 0)
+	{
 		CDC dc(::GetDC(m_hWnd));
 		HelpersGUI::SelectDefaultGUIFont(dc);
-		if (m_hTitleFont == 0)
-			m_hTitleFont = HelpersGUI::CreateBoldFontOfSelectedFont(dc);
 
-		if (m_hTitleFont != 0) {
+		if (m_hTitleFont == 0)
+		{
+			m_hTitleFont = HelpersGUI::CreateBoldFontOfSelectedFont(dc);
+		}
+
+		if (m_hTitleFont != 0)
+		{
 			::SelectObject(dc, m_hTitleFont);
 		}
 
-		m_titleIsSingleLine = true;
+		m_nContentMaxWidth = m_nMaxWidth - 2 * m_nGap;
+
 		m_nTitleHeight = 0;
-		m_nPrefixLength = 0;
+		m_nPrefixWidth = 0;
 		m_nTitleWidth = 0;
-		int nTitleLength = 0;
-		int nMaxLength1 = 0, nMaxLength2 = 0;
-		CSize size;
-		if (m_sPrefix != NULL) {
+		CSize size = CSize(0, 0);
+
+		if (m_sPrefix != NULL)
+		{
 			::GetTextExtentPoint32(dc, m_sPrefix, (int)_tcslen(m_sPrefix), &size);
-			nTitleLength = m_nPrefixLength = size.cx;
-			m_nTitleHeight = size.cy + HelpersGUI::ScaleToScreen(9);
+			m_nPrefixWidth = size.cx;
+			m_nTitleHeight = size.cy;
 		}
-		if (m_sTitle != NULL) {
+
+		if (m_sTitle != NULL)
+		{
+			int nMaxTitleWidth = m_nContentMaxWidth - m_nPrefixWidth - (m_nGap >> 1);
+
 			::GetTextExtentPoint32(dc, m_sTitle, (int)_tcslen(m_sTitle), &size);
-			if (size.cx > HelpersGUI::ScaleToScreen(MAX_WIDTH)) {
-				m_titleIsSingleLine = false;
-				CRect rectTitle(0, 0, HelpersGUI::ScaleToScreen(MAX_WIDTH), HelpersGUI::ScaleToScreen(2));
-				::DrawText(dc, m_sTitle, (int)_tcslen(m_sTitle), &rectTitle, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK | DT_WORD_ELLIPSIS);
+
+			if (size.cx > nMaxTitleWidth)
+			{
+				// m_bTitleSingleLine = false;
+				CRect rectTitle(0, 0, nMaxTitleWidth, INT_MAX);
+				::DrawText(dc, m_sTitle, (int)_tcslen(m_sTitle), &rectTitle, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK);
 				m_nTitleWidth = rectTitle.Width();
-				nTitleLength += m_nTitleWidth;
-				m_nTitleHeight = max(m_nTitleHeight, rectTitle.Height() + HelpersGUI::ScaleToScreen(9));
-			} else {
-				m_nTitleWidth = size.cx;
-				nTitleLength += m_nTitleWidth;
-				m_nTitleHeight = max(m_nTitleHeight, size.cy + HelpersGUI::ScaleToScreen(9));
+				m_nTitleHeight = max(m_nTitleHeight, rectTitle.Height());
 			}
-			int nGap = HelpersGUI::ScaleToScreen(PREFIX_GAP);
-			m_nPrefixLength += nGap;
-			nTitleLength += nGap;
+			else
+			{
+				// m_bTitleSingleLine = true;
+				m_nTitleWidth = size.cx;
+				m_nTitleHeight = max(m_nTitleHeight, size.cy);
+			}
 		}
 
 		HelpersGUI::SelectDefaultGUIFont(dc);
 
-		int nLen1 = 0, nLen2 = 0;
+		int nMaxDescWidth = 0;
+		int nMaxValueWidth = 0;
 		std::list<TextLine>::iterator iter;
-		for (iter = m_lines.begin( ); iter != m_lines.end( ); iter++ ) {
-			if (iter->Desc != NULL) {
+
+		for (iter = m_lines.begin(); iter != m_lines.end(); iter++)
+		{
+			if (iter->Desc != NULL)
+			{
 				::GetTextExtentPoint32(dc, iter->Desc, (int)_tcslen(iter->Desc), &size);
+				nMaxDescWidth = max(nMaxDescWidth, size.cx);
 				m_nLineHeight = max(m_nLineHeight, size.cy);
-				nMaxLength1 = max(nMaxLength1, size.cx);
 			}
-			nLen2 = nLen1;
-			nLen1 = 0;
-			if (iter->Value != NULL) {
+			if (iter->Value != NULL)
+			{
 				::GetTextExtentPoint32(dc, iter->Value, (int)_tcslen(iter->Value), &size);
+				nMaxValueWidth = max(nMaxValueWidth, size.cx);
 				m_nLineHeight = max(m_nLineHeight, size.cy);
-				nMaxLength2 = max(nMaxLength2, size.cx);
-				nLen1 = size.cx;
 			}
 		}
 
-		int nButtonWidth = (int)(m_fDPIScale * BUTTON_SIZE);
-		bool bNeedsExpansionForButton = (nMaxLength2 - max(nLen1, nLen2)) < nButtonWidth + m_nGap;
-		int nContentWidth = max(nTitleLength, nMaxLength1 + nMaxLength2 + m_nGap) + (bNeedsExpansionForButton ? m_nGap + nButtonWidth : 0);
-		
-		int nExpansionX = 0, nExpansionY = 0;
-		if (m_bShowHistogram) {
-			nExpansionX = max(0, HelpersGUI::ScaleToScreen(256) - nContentWidth);
-			nExpansionY = HelpersGUI::ScaleToScreen(HISTOGRAM_HEIGHT) + m_nGap;
-		}
+		m_nTab1 = nMaxDescWidth + m_nGap;
+		m_nTab1 = (m_nTab1 > (m_nMaxWidth >> 1)) ? (m_nMaxWidth >> 1) : m_nTab1;
 
-		nContentWidth += m_nGap * 2 + nExpansionX;
-
+		m_nCommentHeight = 0;
 		bool bHasComment = (m_sComment != NULL);
-		if (bHasComment) {
-			CRect rectComment(0, 0, nContentWidth - m_nGap*2, INT_MAX);
+
+		if (bHasComment)
+		{
+			CRect rectComment(0, 0, m_nContentMaxWidth, INT_MAX);
 			::DrawText(dc, m_sComment, (int)_tcslen(m_sComment), &rectComment, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK);
-			int nCommentHeight = rectComment.Height();
-			int nMaxCommentHeight = MAX_COMMENT_LINES * m_nLineHeight;
-			if (nCommentHeight > nMaxCommentHeight) {
-				CRect rectCommentMax(0, 0, HelpersGUI::ScaleToScreen(MAX_WIDTH) - m_nGap*2, INT_MAX);
-				::DrawText(dc, m_sComment, (int)_tcslen(m_sComment), &rectCommentMax, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK);
-				nContentWidth = HelpersGUI::ScaleToScreen(MAX_WIDTH);
-				m_nCommentHeight = min(nMaxCommentHeight, rectCommentMax.Height());
-			} else {
-				m_nCommentHeight = nCommentHeight;
+
+			m_nCommentWidth = rectComment.Width();
+
+			if (m_nCommentMaxLines == -1)
+			{
+				m_nCommentHeight = rectComment.Height();
+			}
+			else
+			{
+				int nMaxCommentHeight = m_nCommentMaxLines * m_nLineHeight;
+				m_nCommentHeight = min(rectComment.Height(), nMaxCommentHeight);
 			}
 		}
 
-		m_size = CSize(nContentWidth,
-			m_nTitleHeight + (int)m_lines.size()*m_nLineHeight + m_nGap*2 + nExpansionY);
+		int nExpansionX = 0;
+		int	nExpansionY = 0;
 
-		if (bHasComment) {
-			m_size.cy += (m_nGap >> 1) + m_nCommentHeight;
+		if (m_bShowHistogram)
+		{
+			nExpansionX = max(0, m_nHistogramWidth - m_nContentMaxWidth);
+			nExpansionY = m_nHistogramHeight + m_nGap;
 		}
 
-		m_nNoHistogramSize = CSize(m_size.cx - nExpansionX, m_size.cy - nExpansionY);
-		m_nTab1 = nMaxLength1 + m_nGap;
+		int nPanelWidth = m_nMaxWidth;
+		int nPanelHeight = m_nGap + m_nTitleHeight + (m_nGap >> 1);
+
+		if (bHasComment) nPanelHeight += m_nCommentHeight + (m_nGap >> 1); // + Comment
+		nPanelHeight += (int)m_lines.size() * m_nLineHeight + m_nGap;  // + EXIF
+
+		if (!m_bShowHistogram)
+		{
+			m_size = CSize(nPanelWidth, nPanelHeight);
+		}
+		else
+		{
+			m_size = CSize(nPanelWidth + nExpansionX, nPanelHeight + nExpansionY);
+		}
+
+		::ReleaseDC(m_hWnd, dc);
 	}
 	return CRect(m_pos, m_size);
 }
 
+CRect CEXIFDisplay::PanelRectVariable()
+{
+	if (m_nLineHeight == 0)
+	{
+		CDC dc(::GetDC(m_hWnd));
+		HelpersGUI::SelectDefaultGUIFont(dc);
 
-void CEXIFDisplay::RequestRepositioning() {
-	m_nLineHeight = 0;
+		if (m_hTitleFont == 0)
+		{
+			m_hTitleFont = HelpersGUI::CreateBoldFontOfSelectedFont(dc);
+		}
+
+		if (m_hTitleFont != 0)
+		{
+			::SelectObject(dc, m_hTitleFont);
+		}
+
+		m_nContentMaxWidth = m_nMaxWidth - 2 * m_nGap;
+
+		m_nTitleHeight = 0;
+		m_nPrefixWidth = 0;
+		m_nTitleWidth = 0;
+		CSize size = CSize(0, 0);
+
+		if (m_sPrefix != NULL)
+		{
+			::GetTextExtentPoint32(dc, m_sPrefix, (int)_tcslen(m_sPrefix), &size);
+			m_nPrefixWidth = size.cx;
+			m_nTitleHeight = size.cy;
+		}
+
+		if (m_sTitle != NULL)
+		{
+			int nMaxTitleWidth = m_nContentMaxWidth - m_nPrefixWidth - (m_nGap >> 1);
+
+			::GetTextExtentPoint32(dc, m_sTitle, (int)_tcslen(m_sTitle), &size);
+
+			if (size.cx > nMaxTitleWidth)
+			{
+				// m_bTitleSingleLine = false;
+				CRect rectTitle(0, 0, nMaxTitleWidth, INT_MAX);
+				::DrawText(dc, m_sTitle, (int)_tcslen(m_sTitle), &rectTitle, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK);
+				m_nTitleWidth = rectTitle.Width();
+				m_nTitleHeight = max(m_nTitleHeight, rectTitle.Height());
+			}
+			else
+			{
+				// m_bTitleSingleLine = true;
+				m_nTitleWidth = size.cx;
+				m_nTitleHeight = max(m_nTitleHeight, size.cy);
+			}
+		}
+
+		HelpersGUI::SelectDefaultGUIFont(dc);
+
+		int nMaxDescWidth = 0;
+		int nMaxValueWidth = 0;
+		std::list<TextLine>::iterator iter;
+
+		for (iter = m_lines.begin(); iter != m_lines.end(); iter++)
+		{
+			if (iter->Desc != NULL)
+			{
+				::GetTextExtentPoint32(dc, iter->Desc, (int)_tcslen(iter->Desc), &size);
+				nMaxDescWidth = max(nMaxDescWidth, size.cx);
+				m_nLineHeight = max(m_nLineHeight, size.cy);
+			}
+			if (iter->Value != NULL)
+			{
+				::GetTextExtentPoint32(dc, iter->Value, (int)_tcslen(iter->Value), &size);
+				nMaxValueWidth = max(nMaxValueWidth, size.cx);
+				m_nLineHeight = max(m_nLineHeight, size.cy);
+			}
+		}
+
+		m_nTab1 = nMaxDescWidth + m_nGap;
+		m_nTab1 = (m_nTab1 > (m_nMaxWidth >> 1)) ? (m_nMaxWidth >> 1) : m_nTab1;
+
+		m_nCommentHeight = 0;
+		bool bHasComment = (m_sComment != NULL);
+
+		if (bHasComment)
+		{
+			CRect rectComment(0, 0, m_nContentMaxWidth, INT_MAX);
+			::DrawText(dc, m_sComment, (int)_tcslen(m_sComment), &rectComment, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK);
+
+			m_nCommentWidth = rectComment.Width();
+
+			if (m_nCommentMaxLines == -1)
+			{
+				m_nCommentHeight = rectComment.Height();
+			}
+			else
+			{
+				int nMaxCommentHeight = m_nCommentMaxLines * m_nLineHeight;
+				m_nCommentHeight = min(rectComment.Height(), nMaxCommentHeight);
+			}
+		}
+
+		int nExpansionX = 0;
+		int	nExpansionY = 0;
+
+		if (m_bShowHistogram)
+		{
+			nExpansionX = max(0, m_nHistogramWidth - m_nContentMaxWidth);
+			nExpansionY = m_nHistogramHeight + m_nGap;
+		}
+
+		int nPanelWidth = max(m_nPrefixWidth + (m_nGap >> 1) + m_nTitleWidth, nMaxDescWidth + nMaxValueWidth);
+		nPanelWidth = max(nPanelWidth, m_nCommentWidth);
+		nPanelWidth = min(nPanelWidth, m_nContentMaxWidth);
+		nPanelWidth += 2 * m_nGap;
+
+		int nPanelHeight = m_nGap + m_nTitleHeight + (m_nGap >> 1);
+		if (bHasComment) nPanelHeight += m_nCommentHeight + (m_nGap >> 1); // + Comment
+		nPanelHeight += (int)m_lines.size() * m_nLineHeight + m_nGap;  // + EXIF
+
+		if (!m_bShowHistogram)
+		{
+			m_size = CSize(nPanelWidth, nPanelHeight);
+		}
+		else
+		{
+			m_size = CSize(nPanelWidth + nExpansionX, nPanelHeight + nExpansionY);
+		}
+
+		::ReleaseDC(m_hWnd, dc);
+	}
+	return CRect(m_pos, m_size);
 }
 
-void CEXIFDisplay::OnPaint(CDC & dc, const CPoint& offset) {
+void CEXIFDisplay::OnPaint(CDC & dc, const CPoint& offset)
+{
 	CURLCtrl* pLinkLocation = GetControl<CURLCtrl*>(CEXIFDisplay::ID_urlLocation);
 	bool isLinkLocationShown = pLinkLocation->IsShown();
 	pLinkLocation->SetShow(false, false);
@@ -277,78 +471,99 @@ void CEXIFDisplay::OnPaint(CDC & dc, const CPoint& offset) {
 	int nX = m_pos.x + offset.x;
 	int nY = m_pos.y + offset.y;
 
-	if (m_hTitleFont != 0) {
+	if (m_hTitleFont != 0)
+	{
 		::SelectObject(dc, m_hTitleFont);
 	}
+
 	::SetBkMode(dc, TRANSPARENT);
 	::SetTextColor(dc, RGB(255, 255, 255));
-	if (m_sPrefix != NULL) {
+
+	int nXEdge = nX + m_nGap + m_size.cx - 2 * m_nGap;
+
+	if (m_sPrefix != NULL)
+	{
 		::TextOut(dc, nX + m_nGap, nY + m_nGap, m_sPrefix, (int)_tcslen(m_sPrefix));
 	}
-	if (m_sTitle != NULL) {
-		int nXStart = nX + m_nGap + m_nPrefixLength;
-		if (m_titleIsSingleLine) {
-			::TextOut(dc, nXStart, nY + m_nGap, m_sTitle, (int)_tcslen(m_sTitle));
-		} else {
-			CRect rectTitle(nXStart, nY + m_nGap, nXStart + m_nTitleWidth, nY + m_nGap + m_nTitleHeight);
-			::DrawText(dc, m_sTitle, (int)_tcslen(m_sTitle), &rectTitle, DT_NOPREFIX | DT_WORDBREAK | DT_WORD_ELLIPSIS);
-		}
+
+	int nRunningY = nY + m_nGap;
+
+	if (m_sTitle != NULL)
+	{
+		int nXStart = nX + m_nGap + m_nPrefixWidth + (m_nGap >> 1);
+		CRect rectTitle(nXStart, nRunningY, nXEdge, nRunningY + m_nTitleHeight);
+		::DrawText(dc, m_sTitle, (int)_tcslen(m_sTitle), &rectTitle, DT_NOPREFIX | DT_WORDBREAK);
 	}
 
 	::SetTextColor(dc, RGB(243, 242, 231));
 	HelpersGUI::SelectDefaultGUIFont(dc);
 
-	int nRunningY = nY + m_nTitleHeight + m_nGap;
+	nRunningY += m_nTitleHeight + (m_nGap >> 1);
 
-	if (m_sComment != NULL) {
-		CRect rectComment(nX + m_nGap, nRunningY, nX + m_size.cx - m_nGap, nRunningY + m_nCommentHeight);
-		::DrawText(dc, m_sComment, (int)_tcslen(m_sComment), &rectComment, DT_NOPREFIX | DT_WORDBREAK | DT_WORD_ELLIPSIS);
-		nRunningY += m_nCommentHeight;
-		nRunningY += m_nGap >> 1;
+	if (m_sComment != NULL)
+	{
+		CRect rectComment(nX + m_nGap, nRunningY, nXEdge, nRunningY + m_nCommentHeight);
+		::DrawText(dc, m_sComment, (int)_tcslen(m_sComment), &rectComment, DT_NOPREFIX | DT_WORDBREAK | DT_END_ELLIPSIS);
+		nRunningY += m_nCommentHeight + (m_nGap >> 1);
 	}
 
 	std::list<TextLine>::iterator iter;
-	for (iter = m_lines.begin( ); iter != m_lines.end( ); iter++ ) {
-		if (iter->Desc != NULL) {
-			::TextOut(dc, nX + m_nGap, nRunningY, iter->Desc, (int)_tcslen(iter->Desc));
+	for (iter = m_lines.begin(); iter != m_lines.end(); iter++ )
+	{
+		if (iter->Desc != NULL)
+		{
+			CRect rectDesc(nX + m_nGap, nRunningY, nX  + m_nTab1, nRunningY + m_nLineHeight);
+			::DrawText(dc, iter->Desc, (int)_tcslen(iter->Desc), &rectDesc, DT_NOPREFIX | DT_WORD_ELLIPSIS);
 		}
-		if (iter->Value != NULL) {
-			if (iter->ValueIsURL) {
+		if (iter->Value != NULL)
+		{
+			if (iter->ValueIsURL)
+			{
 				pLinkLocation->SetShow(isLinkLocationShown, false);
-				pLinkLocation->SetPosition(CRect(CPoint(nX + m_nGap + m_nTab1 - offset.x, nRunningY - offset.y), pLinkLocation->GetMinSize()));
+				pLinkLocation->SetPosition(CRect(CPoint(nX + m_nTab1 - offset.x, nRunningY - offset.y), pLinkLocation->GetMinSize()));
 				if (isLinkLocationShown) pLinkLocation->OnPaint(dc, offset);
 				::SetTextColor(dc, RGB(243, 242, 231));
 				HelpersGUI::SelectDefaultGUIFont(dc);
-			} else {
-				::TextOut(dc, nX + m_nGap + m_nTab1, nRunningY, iter->Value, (int)_tcslen(iter->Value));
+			}
+			else
+			{
+				CRect rectValue(nX + m_nTab1, nRunningY, nXEdge, nRunningY + m_nLineHeight);
+				::DrawText(dc, iter->Value, (int)_tcslen(iter->Value), &rectValue, DT_NOPREFIX | DT_WORD_ELLIPSIS);
 			}
 		}
 		nRunningY += m_nLineHeight;
 	}
 
-	if (m_bShowHistogram) {
+	if (m_bShowHistogram)
+	{
 		::SelectObject(dc, ::GetStockObject(WHITE_PEN));
+
+		int nHistogramWidth = m_nHistogramWidth;
 		int nHistogramYBase = nY + m_size.cy - m_nGap;
-		int nHistogramXBase = nX + (m_size.cx - HelpersGUI::ScaleToScreen(256)) / 2;
+		int nHistogramXBase = nX + (m_size.cx - nHistogramWidth) / 2;
+
 		dc.MoveTo(nHistogramXBase, nHistogramYBase);
-		dc.LineTo(nHistogramXBase + HelpersGUI::ScaleToScreen(256), nHistogramYBase);
-		if (m_pHistogram != NULL) {
+		dc.LineTo(nHistogramXBase + m_nHistogramWidth, nHistogramYBase);
+
+		if (m_pHistogram != NULL)
+		{
 			PaintHistogram(dc, nHistogramXBase, nHistogramYBase);
 		}
 	}
 }
 
-void CEXIFDisplay::PaintHistogram(CDC & dc, int nXStart, int nYBaseLine) {
+void CEXIFDisplay::PaintHistogram(CDC & dc, int nXStart, int nYBaseLine)
+{
 	const int* pChannelGrey = m_pHistogram->GetChannelGrey();
 	int nMaxValue = 0;
 	for (int i = 0; i < 256; i++) {
 		nMaxValue = max(pChannelGrey[i], nMaxValue);
 	}
-	double dScaling = (nMaxValue == 0) ? 0.0f : HelpersGUI::ScaleToScreen(HISTOGRAM_HEIGHT) / sqrt((double)nMaxValue);
+	double dScaling = (nMaxValue == 0) ? 0.0f : m_nHistogramHeight / sqrt((double)nMaxValue);
 
 	HPEN hPen = ::CreatePen(PS_SOLID, 1, RGB(190, 190, 170));
 	HGDIOBJ hOldPen = ::SelectObject(dc, hPen);
-	int length = HelpersGUI::ScaleToScreen(256);
+	int length = m_nHistogramWidth;
 	float reductionFactor = 256.0f / length;
 	for (int i = 0; i < length; i++) {
 		int nLineHeight = (int)(sqrt((double)pChannelGrey[(int)(i * reductionFactor)]) * dScaling + 0.5);
@@ -359,22 +574,32 @@ void CEXIFDisplay::PaintHistogram(CDC & dc, int nXStart, int nYBaseLine) {
 	::DeleteObject(hPen);
 }
 
-void CEXIFDisplay::RepositionAll() {
+void CEXIFDisplay::RepositionAll()
+{
 	CRect panelRect = PanelRect();
 
 	CUICtrl* pButton = GetControl(ID_btnShowHideHistogram);
-	if (pButton != NULL) {
+
+	if (pButton != NULL)
+	{
 		int nButtonSize = (int)(m_fDPIScale * BUTTON_SIZE);
-		pButton->SetPosition(CRect(CPoint(panelRect.left + m_nNoHistogramSize.cx - m_nGap - nButtonSize, panelRect.top + m_nNoHistogramSize.cy - m_nGap - nButtonSize), CSize(nButtonSize, nButtonSize)));
+		int nX = panelRect.right - m_nGap - nButtonSize;
+		int nY = panelRect.bottom - m_nGap - nButtonSize;
+		nY -= m_bShowHistogram ? m_nHistogramHeight + m_nGap : 0;
+		pButton->SetPosition(CRect(CPoint(nX, nY), CSize(nButtonSize, nButtonSize)));
 	}
+
 	CUICtrl* pButtonClose = GetControl(ID_btnClose);
-	if (pButtonClose != NULL) {
+
+	if (pButtonClose != NULL)
+	{
 		int nButtonSize = (int)(m_fDPIScale * BUTTON_SIZE * 0.9f);
 		pButtonClose->SetPosition(CRect(CPoint(panelRect.right - nButtonSize, panelRect.top), CSize(nButtonSize, nButtonSize)));
 	}
 }
 
-static void PaintShowHistogramBtnOnePass(CDC& dc, const CRect& r, bool bArrowDown) {
+static void PaintShowHistogramBtnOnePass(CDC& dc, const CRect& r, bool bArrowDown)
+{
 	CPoint p1(r.left + 1, r.top + 1);
 	CPoint p2(r.right, r.top);
 	int nMiddleX = (r.left + r.right) / 2;
@@ -392,18 +617,21 @@ static void PaintShowHistogramBtnOnePass(CDC& dc, const CRect& r, bool bArrowDow
 	}
 }
 
-void CEXIFDisplay::PaintShowHistogramBtn(void* pContext, const CRect& rect, CDC& dc) {
+void CEXIFDisplay::PaintShowHistogramBtn(void* pContext, const CRect& rect, CDC& dc)
+{
 	CEXIFDisplay* pThis = (CEXIFDisplay*)pContext;
 	CRect r = InflateRect(rect, 0.3f);
 	r.OffsetRect(CPoint(0, 1));
 	PaintShowHistogramBtnOnePass(dc, r, pThis->GetShowHistogram());
-	if (HelpersGUI::ScreenScaling >= 2) {
+	if (HelpersGUI::ScreenScaling >= 2)
+	{
 		r.OffsetRect(0, 1);
 		PaintShowHistogramBtnOnePass(dc, r, pThis->GetShowHistogram());
 	}
 }
 
-static void PaintCloseBtnOnePass(CDC& dc, const CRect& r) {
+static void PaintCloseBtnOnePass(CDC& dc, const CRect& r)
+{
 	CPoint p1(r.left + 1, r.top + 1);
 	dc.MoveTo(p1);
 	CPoint p2(r.right, r.bottom);
@@ -414,7 +642,8 @@ static void PaintCloseBtnOnePass(CDC& dc, const CRect& r) {
 	dc.LineTo(p4);
 }
 
-void CEXIFDisplay::PaintCloseBtn(void* pContext, const CRect& rect, CDC& dc) {
+void CEXIFDisplay::PaintCloseBtn(void* pContext, const CRect& rect, CDC& dc)
+{
 	CRect r = Helpers::InflateRect(rect, 0.25f);
 	PaintCloseBtnOnePass(dc, r);
 	if (HelpersGUI::ScreenScaling >= 2) {
@@ -423,7 +652,8 @@ void CEXIFDisplay::PaintCloseBtn(void* pContext, const CRect& rect, CDC& dc) {
 	}
 }
 
-LPCTSTR CEXIFDisplay::ShowHistogramTooltip(void* pContext) {
+LPCTSTR CEXIFDisplay::ShowHistogramTooltip(void* pContext)
+{
 	CEXIFDisplay* pThis = (CEXIFDisplay*)pContext;
 	if (pThis->GetShowHistogram()) {
 		return CNLS::GetString(_T("Hide histogram"));
@@ -431,5 +661,3 @@ LPCTSTR CEXIFDisplay::ShowHistogramTooltip(void* pContext) {
 		return CNLS::GetString(_T("Show histogram"));
 	}
 }
-
-
