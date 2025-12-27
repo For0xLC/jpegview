@@ -1286,12 +1286,7 @@ LRESULT CMainDlg::OnCtlColorEdit(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/
 }
 
 LRESULT CMainDlg::OnEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-	// Set background color to prevent flush
-	HDC hdc = (HDC)wParam;
-	CRect rect;
-	GetClientRect(&rect);
-	FillRect(hdc, &rect, m_bBackBrush.m_hBrush);
-
+	// prevent erasing background
 	bHandled = TRUE;
 	return TRUE;
 }
