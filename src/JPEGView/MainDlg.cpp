@@ -1285,7 +1285,7 @@ LRESULT CMainDlg::OnCtlColorEdit(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/
 	return (LRESULT)::GetStockObject(BLACK_BRUSH);
 }
 
-LRESULT CMainDlg::OnEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+LRESULT CMainDlg::OnEraseBackground(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	// prevent erasing background
 	bHandled = TRUE;
 	return TRUE;
